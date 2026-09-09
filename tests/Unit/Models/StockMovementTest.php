@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\StockMovement;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use LogicException;
 use Tests\TestCase;
 
 class StockMovementTest extends TestCase
@@ -143,5 +144,63 @@ class StockMovementTest extends TestCase
 
         $this->assertSame('-3.500', (string) $movement->quantity);
         $this->assertSame('6.500', (string) $movement->quantity_after);
+    }
+
+    public function test_stock_movement_cannot_be_updated(): void
+    {
+        $category = Category::factory()->create();
+
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+        ]);
+
+        $user = User::factory()->create();
+
+        $movement = StockMovement::query()->create([
+            'product_id' => $product->id,
+            'movement_type' => 'purchase',
+            'quantity' => '10.000',
+            'quantity_before' => '5.000',
+            'quantity_after' => '15.000',
+            'reason' => 'Original reason',
+            'created_by' => $user->id,
+        ]);
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage(
+            'Stock movements are immutable and cannot be updated.'
+        );
+
+        $movement->update([
+            'reason' => 'Tampered reason',
+        ]);
+    }
+
+    public function test_stock_movement_cannot_be_deleted(): void
+    {
+        $category = Category::factory()->create();
+
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+        ]);
+
+        $user = User::factory()->create();
+
+        $movement = StockMovement::query()->create([
+            'product_id' => $product->id,
+            'movement_type' => 'sale',
+            'quantity' => '-2.000',
+            'quantity_before' => '10.000',
+            'quantity_after' => '8.000',
+            'reason' => 'Original sale',
+            'created_by' => $user->id,
+        ]);
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage(
+            'Stock movements are immutable and cannot be deleted.'
+        );
+
+        $movement->delete();
     }
 }

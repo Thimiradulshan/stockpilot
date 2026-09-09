@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Services;
 
+use App\Enums\StockMovementType;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\StockMovement;
@@ -42,7 +43,7 @@ class StockServiceTest extends TestCase
         $this->assertSame('15.250', (string) $product->quantity);
 
         $this->assertSame(
-            'purchase',
+            StockMovementType::PURCHASE,
             $movement->movement_type
         );
 
@@ -83,7 +84,7 @@ class StockServiceTest extends TestCase
         $this->assertSame('6.500', (string) $product->quantity);
 
         $this->assertSame(
-            'sale',
+            StockMovementType::SALE,
             $movement->movement_type
         );
 
@@ -118,7 +119,10 @@ class StockServiceTest extends TestCase
 
         $this->assertSame('12.125', (string) $product->quantity);
         $this->assertSame('2.125', (string) $movement->quantity);
-        $this->assertSame('adjustment', $movement->movement_type);
+        $this->assertSame(
+            StockMovementType::ADJUSTMENT,
+            $movement->movement_type
+        );
     }
 
     public function test_adjustment_can_remove_stock(): void
@@ -136,6 +140,10 @@ class StockServiceTest extends TestCase
 
         $this->assertSame('7.875', (string) $product->quantity);
         $this->assertSame('-2.125', (string) $movement->quantity);
+        $this->assertSame(
+            StockMovementType::ADJUSTMENT,
+            $movement->movement_type
+        );
     }
 
     public function test_stock_cannot_become_negative(): void
@@ -243,7 +251,7 @@ class StockServiceTest extends TestCase
             product: $product,
             quantity: '4.000',
             actor: $user,
-            movementType: 'purchase',
+            movementType: StockMovementType::PURCHASE,
             referenceType: 'purchase',
             referenceId: 25,
             reason: 'Supplier delivery',
@@ -258,6 +266,10 @@ class StockServiceTest extends TestCase
         $this->assertSame(
             'Received in good condition.',
             $movement->notes
+        );
+        $this->assertSame(
+            StockMovementType::PURCHASE,
+            $movement->movement_type
         );
     }
 
@@ -322,7 +334,7 @@ class StockServiceTest extends TestCase
         {
             protected function persistMovement(
                 Product $product,
-                string $movementType,
+                StockMovementType $movementType,
                 BigDecimal $quantity,
                 BigDecimal $quantityBefore,
                 BigDecimal $quantityAfter,

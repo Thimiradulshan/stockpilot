@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\StockMovementType;
 use App\Models\Product;
 use App\Models\StockMovement;
 use App\Models\User;
@@ -22,7 +23,7 @@ class StockService
         Product $product,
         string|int $quantity,
         User $actor,
-        string $movementType = 'purchase',
+        StockMovementType $movementType = StockMovementType::PURCHASE,
         ?string $referenceType = null,
         ?int $referenceId = null,
         ?string $reason = null,
@@ -51,7 +52,7 @@ class StockService
         Product $product,
         string|int $quantity,
         User $actor,
-        string $movementType = 'sale',
+        StockMovementType $movementType = StockMovementType::SALE,
         ?string $referenceType = null,
         ?int $referenceId = null,
         ?string $reason = null,
@@ -83,7 +84,7 @@ class StockService
         Product $product,
         string|int $signedQuantity,
         User $actor,
-        string $movementType = 'adjustment',
+        StockMovementType $movementType = StockMovementType::ADJUSTMENT,
         ?string $referenceType = null,
         ?int $referenceId = null,
         ?string $reason = null,
@@ -118,7 +119,7 @@ class StockService
         Product $product,
         BigDecimal $signedQuantity,
         User $actor,
-        string $movementType,
+        StockMovementType $movementType,
         ?string $referenceType,
         ?int $referenceId,
         ?string $reason,
@@ -127,12 +128,6 @@ class StockService
         if (! $actor->isActive()) {
             throw new LogicException(
                 'Inactive users cannot perform stock operations.'
-            );
-        }
-
-        if (trim($movementType) === '') {
-            throw new InvalidArgumentException(
-                'Stock movement type is required.'
             );
         }
 
@@ -201,7 +196,7 @@ class StockService
      */
     protected function persistMovement(
         Product $product,
-        string $movementType,
+        StockMovementType $movementType,
         BigDecimal $quantity,
         BigDecimal $quantityBefore,
         BigDecimal $quantityAfter,

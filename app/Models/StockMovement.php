@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Enums\StockMovementType;
 use Database\Factories\StockMovementFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use LogicException;
 
 #[Fillable([
     'product_id',
@@ -24,6 +26,24 @@ class StockMovement extends Model
 {
     /** @use HasFactory<StockMovementFactory> */
     use HasFactory;
+
+    /**
+     * Prevent historical stock movements from being modified or deleted.
+     */
+    protected static function booted(): void
+    {
+        static::updating(function (): void {
+            throw new LogicException(
+                'Stock movements are immutable and cannot be updated.'
+            );
+        });
+
+        static::deleting(function (): void {
+            throw new LogicException(
+                'Stock movements are immutable and cannot be deleted.'
+            );
+        });
+    }
 
     /**
      * The product affected by this stock movement.
@@ -47,6 +67,7 @@ class StockMovement extends Model
     protected function casts(): array
     {
         return [
+            'movement_type' => StockMovementType::class,
             'quantity' => 'decimal:3',
             'quantity_before' => 'decimal:3',
             'quantity_after' => 'decimal:3',
