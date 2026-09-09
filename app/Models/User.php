@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -17,6 +17,8 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property int $id
  * @property string $name
  * @property string $email
+ * @property string $role
+ * @property string $status
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $two_factor_secret
@@ -27,7 +29,12 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property Carbon|null $updated_at
  */
 #[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
+#[Hidden([
+    'password',
+    'two_factor_secret',
+    'two_factor_recovery_codes',
+    'remember_token',
+])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -47,7 +54,91 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the user's initials
+     * Return the user's role as a validated enum.
+     *
+     * Invalid stored values return null instead of throwing.
+     */
+    public function roleEnum(): ?UserRole
+    {
+        $role = $this->getRawOriginal('role');
+
+        if ($role instanceof UserRole) {
+            return $role;
+        }
+
+        if (! is_string($role)) {
+            return null;
+        }
+
+        return UserRole::tryFrom($role);
+    }
+
+    /**
+     * Get purchases created by this user.
+     */
+    public function purchases()
+    {
+        return $this->hasMany(Purchase::class, 'created_by');
+    }
+
+    /**
+     * Get invoices created by this user.
+     */
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class, 'created_by');
+    }
+
+    /**
+     * Get payments received by this user.
+     */
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'received_by');
+    }
+
+    /**
+     * Get stock movements created by this user.
+     */
+    public function stockMovements()
+    {
+        return $this->hasMany(StockMovement::class, 'created_by');
+    }
+
+    /**
+     * Determine whether the user is an administrator.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->roleEnum() === UserRole::ADMIN;
+    }
+
+    /**
+     * Determine whether the user is a sales user.
+     */
+    public function isSalesUser(): bool
+    {
+        return $this->roleEnum() === UserRole::SALES;
+    }
+
+    /**
+     * Determine whether the user is a stock user.
+     */
+    public function isStockUser(): bool
+    {
+        return $this->roleEnum() === UserRole::STOCK;
+    }
+
+    /**
+     * Determine whether the user account is active.
+     */
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
+    }
+
+    /**
+     * Get the user's initials.
      */
     public function initials(): string
     {
