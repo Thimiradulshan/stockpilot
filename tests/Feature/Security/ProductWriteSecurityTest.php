@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Security;
 
+use App\Enums\UserRole;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
@@ -16,100 +17,134 @@ class ProductWriteSecurityTest extends TestCase
     {
         $category = Category::factory()->create();
 
-        $this->post(route('admin.products.store'), [
+        $response = $this->post('/admin/products', [
             'category_id' => $category->id,
             'name' => 'Test Product',
-            'sku' => 'SKU-001',
+            'sku' => 'SKU-TEST-001',
             'cost_price' => '100.00',
             'selling_price' => '150.00',
-            'reorder_level' => '10.000',
-        ])->assertRedirect(route('login'));
+            'reorder_level' => '5',
+        ]);
+
+        $response->assertRedirect(route('login'));
+
+        $this->assertDatabaseMissing('products', [
+            'sku' => 'SKU-TEST-001',
+        ]);
     }
 
     public function test_sales_user_cannot_create_a_product(): void
     {
-        $user = User::factory()->sales()->create();
+        $user = User::factory()->create([
+            'role' => UserRole::SALES->value,
+        ]);
+
         $category = Category::factory()->create();
 
-        $this->actingAs($user)
-            ->post(route('admin.products.store'), [
-                'category_id' => $category->id,
-                'name' => 'Test Product',
-                'sku' => 'SKU-002',
-                'cost_price' => '100.00',
-                'selling_price' => '150.00',
-                'reorder_level' => '10.000',
-            ])
-            ->assertForbidden();
+        $this->actingAs($user);
+
+        $response = $this->post('/admin/products', [
+            'category_id' => $category->id,
+            'name' => 'Test Product',
+            'sku' => 'SKU-SALES-001',
+            'cost_price' => '100.00',
+            'selling_price' => '150.00',
+            'reorder_level' => '5',
+        ]);
+
+        $response->assertForbidden();
+
+        $this->assertDatabaseMissing('products', [
+            'sku' => 'SKU-SALES-001',
+        ]);
     }
 
     public function test_stock_user_can_create_a_valid_product(): void
     {
-        $user = User::factory()->stock()->create();
+        $user = User::factory()->create([
+            'role' => UserRole::STOCK->value,
+        ]);
+
         $category = Category::factory()->create();
 
-        $this->actingAs($user)
-            ->post(route('admin.products.store'), [
-                'category_id' => $category->id,
-                'name' => 'Test Product',
-                'sku' => 'SKU-003',
-                'cost_price' => '100.00',
-                'selling_price' => '150.00',
-                'reorder_level' => '10.000',
-            ])
-            ->assertRedirect(route('admin.products.index'));
+        $this->actingAs($user);
 
-        $product = Product::query()
-            ->where('sku', 'SKU-003')
-            ->firstOrFail();
+        $response = $this->post('/admin/products', [
+            'category_id' => $category->id,
+            'name' => 'Valid Product',
+            'sku' => 'SKU-STOCK-001',
+            'cost_price' => '100.00',
+            'selling_price' => '150.00',
+            'reorder_level' => '5',
+        ]);
 
-        $this->assertSame('0.000', (string) $product->quantity);
-        $this->assertSame('active', $product->status);
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect();
+
+        $this->assertDatabaseHas('products', [
+            'category_id' => $category->id,
+            'name' => 'Valid Product',
+            'sku' => 'SKU-STOCK-001',
+            'cost_price' => '100.00',
+            'selling_price' => '150.00',
+            'reorder_level' => '5.000',
+            'quantity' => '0.000',
+        ]);
     }
 
     public function test_admin_can_create_a_valid_product(): void
     {
-        $user = User::factory()->admin()->create();
+        $user = User::factory()->create([
+            'role' => UserRole::ADMIN->value,
+        ]);
+
         $category = Category::factory()->create();
 
-        $this->actingAs($user)
-            ->post(route('admin.products.store'), [
-                'category_id' => $category->id,
-                'name' => 'Admin Product',
-                'sku' => 'SKU-004',
-                'cost_price' => '200.00',
-                'selling_price' => '250.00',
-                'reorder_level' => '20.000',
-            ])
-            ->assertRedirect(route('admin.products.index'));
+        $this->actingAs($user);
+
+        $response = $this->post('/admin/products', [
+            'category_id' => $category->id,
+            'name' => 'Admin Product',
+            'sku' => 'SKU-ADMIN-001',
+            'cost_price' => '100.00',
+            'selling_price' => '150.00',
+            'reorder_level' => '5',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect();
 
         $this->assertDatabaseHas('products', [
-            'sku' => 'SKU-004',
-            'name' => 'Admin Product',
+            'sku' => 'SKU-ADMIN-001',
             'quantity' => '0.000',
-            'status' => 'active',
         ]);
     }
 
     public function test_quantity_cannot_be_supplied_during_product_creation(): void
     {
-        $user = User::factory()->stock()->create();
+        $user = User::factory()->create([
+            'role' => UserRole::STOCK->value,
+        ]);
+
         $category = Category::factory()->create();
 
-        $this->actingAs($user)
-            ->post(route('admin.products.store'), [
-                'category_id' => $category->id,
-                'name' => 'Tampered Product',
-                'sku' => 'SKU-005',
-                'cost_price' => '100.00',
-                'selling_price' => '150.00',
-                'reorder_level' => '10.000',
-                'quantity' => '999999.000',
-            ])
-            ->assertRedirect(route('admin.products.index'));
+        $this->actingAs($user);
+
+        $response = $this->post('/admin/products', [
+            'category_id' => $category->id,
+            'name' => 'Quantity Attack',
+            'sku' => 'SKU-QTY-001',
+            'cost_price' => '100.00',
+            'selling_price' => '150.00',
+            'reorder_level' => '5',
+            'quantity' => '9999',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect();
 
         $product = Product::query()
-            ->where('sku', 'SKU-005')
+            ->where('sku', 'SKU-QTY-001')
             ->firstOrFail();
 
         $this->assertSame('0.000', (string) $product->quantity);
@@ -117,23 +152,29 @@ class ProductWriteSecurityTest extends TestCase
 
     public function test_status_cannot_be_supplied_during_product_creation(): void
     {
-        $user = User::factory()->stock()->create();
+        $user = User::factory()->create([
+            'role' => UserRole::STOCK->value,
+        ]);
+
         $category = Category::factory()->create();
 
-        $this->actingAs($user)
-            ->post(route('admin.products.store'), [
-                'category_id' => $category->id,
-                'name' => 'Status Tampered Product',
-                'sku' => 'SKU-006',
-                'cost_price' => '100.00',
-                'selling_price' => '150.00',
-                'reorder_level' => '10.000',
-                'status' => 'inactive',
-            ])
-            ->assertRedirect(route('admin.products.index'));
+        $this->actingAs($user);
+
+        $response = $this->post('/admin/products', [
+            'category_id' => $category->id,
+            'name' => 'Status Attack',
+            'sku' => 'SKU-STATUS-001',
+            'cost_price' => '100.00',
+            'selling_price' => '150.00',
+            'reorder_level' => '5',
+            'status' => 'inactive',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect();
 
         $product = Product::query()
-            ->where('sku', 'SKU-006')
+            ->where('sku', 'SKU-STATUS-001')
             ->firstOrFail();
 
         $this->assertSame('active', $product->status);
@@ -141,155 +182,272 @@ class ProductWriteSecurityTest extends TestCase
 
     public function test_negative_cost_price_is_rejected(): void
     {
-        $user = User::factory()->stock()->create();
+        $user = User::factory()->create([
+            'role' => UserRole::STOCK->value,
+        ]);
+
         $category = Category::factory()->create();
 
-        $this->actingAs($user)
-            ->post(route('admin.products.store'), [
-                'category_id' => $category->id,
-                'name' => 'Invalid Cost',
-                'sku' => 'SKU-007',
-                'cost_price' => '-1.00',
-                'selling_price' => '150.00',
-                'reorder_level' => '10.000',
-            ])
-            ->assertSessionHasErrors('cost_price');
+        $this->actingAs($user);
+
+        $response = $this->post('/admin/products', [
+            'category_id' => $category->id,
+            'name' => 'Negative Cost',
+            'sku' => 'SKU-NEG-COST-001',
+            'cost_price' => '-1.00',
+            'selling_price' => '150.00',
+            'reorder_level' => '5',
+        ]);
+
+        $response->assertSessionHasErrors('cost_price');
 
         $this->assertDatabaseMissing('products', [
-            'sku' => 'SKU-007',
+            'sku' => 'SKU-NEG-COST-001',
         ]);
     }
 
     public function test_negative_selling_price_is_rejected(): void
     {
-        $user = User::factory()->stock()->create();
+        $user = User::factory()->create([
+            'role' => UserRole::STOCK->value,
+        ]);
+
         $category = Category::factory()->create();
 
-        $this->actingAs($user)
-            ->post(route('admin.products.store'), [
-                'category_id' => $category->id,
-                'name' => 'Invalid Selling Price',
-                'sku' => 'SKU-008',
-                'cost_price' => '100.00',
-                'selling_price' => '-1.00',
-                'reorder_level' => '10.000',
-            ])
-            ->assertSessionHasErrors('selling_price');
+        $this->actingAs($user);
+
+        $response = $this->post('/admin/products', [
+            'category_id' => $category->id,
+            'name' => 'Negative Selling',
+            'sku' => 'SKU-NEG-SELL-001',
+            'cost_price' => '100.00',
+            'selling_price' => '-1.00',
+            'reorder_level' => '5',
+        ]);
+
+        $response->assertSessionHasErrors('selling_price');
 
         $this->assertDatabaseMissing('products', [
-            'sku' => 'SKU-008',
+            'sku' => 'SKU-NEG-SELL-001',
         ]);
     }
 
     public function test_negative_reorder_level_is_rejected(): void
     {
-        $user = User::factory()->stock()->create();
+        $user = User::factory()->create([
+            'role' => UserRole::STOCK->value,
+        ]);
+
         $category = Category::factory()->create();
 
-        $this->actingAs($user)
-            ->post(route('admin.products.store'), [
-                'category_id' => $category->id,
-                'name' => 'Invalid Reorder Level',
-                'sku' => 'SKU-009',
-                'cost_price' => '100.00',
-                'selling_price' => '150.00',
-                'reorder_level' => '-1.000',
-            ])
-            ->assertSessionHasErrors('reorder_level');
+        $this->actingAs($user);
+
+        $response = $this->post('/admin/products', [
+            'category_id' => $category->id,
+            'name' => 'Negative Reorder',
+            'sku' => 'SKU-NEG-REORDER-001',
+            'cost_price' => '100.00',
+            'selling_price' => '150.00',
+            'reorder_level' => '-5',
+        ]);
+
+        $response->assertSessionHasErrors('reorder_level');
 
         $this->assertDatabaseMissing('products', [
-            'sku' => 'SKU-009',
+            'sku' => 'SKU-NEG-REORDER-001',
         ]);
     }
 
     public function test_invalid_category_is_rejected(): void
     {
-        $user = User::factory()->stock()->create();
+        $user = User::factory()->create([
+            'role' => UserRole::STOCK->value,
+        ]);
 
-        $this->actingAs($user)
-            ->post(route('admin.products.store'), [
-                'category_id' => 999999,
-                'name' => 'Invalid Category',
-                'sku' => 'SKU-010',
-                'cost_price' => '100.00',
-                'selling_price' => '150.00',
-                'reorder_level' => '10.000',
-            ])
-            ->assertSessionHasErrors('category_id');
+        $this->actingAs($user);
+
+        $response = $this->post('/admin/products', [
+            'category_id' => 999999,
+            'name' => 'Invalid Category',
+            'sku' => 'SKU-CATEGORY-001',
+            'cost_price' => '100.00',
+            'selling_price' => '150.00',
+            'reorder_level' => '5',
+        ]);
+
+        $response->assertSessionHasErrors('category_id');
 
         $this->assertDatabaseMissing('products', [
-            'sku' => 'SKU-010',
+            'sku' => 'SKU-CATEGORY-001',
         ]);
     }
 
     public function test_duplicate_sku_is_rejected(): void
     {
-        $user = User::factory()->stock()->create();
+        $user = User::factory()->create([
+            'role' => UserRole::STOCK->value,
+        ]);
+
         $category = Category::factory()->create();
 
         Product::factory()->create([
             'category_id' => $category->id,
-            'sku' => 'SKU-011',
+            'sku' => 'SKU-DUPLICATE-001',
         ]);
 
-        $this->actingAs($user)
-            ->post(route('admin.products.store'), [
-                'category_id' => $category->id,
-                'name' => 'Duplicate SKU',
-                'sku' => 'SKU-011',
-                'cost_price' => '100.00',
-                'selling_price' => '150.00',
-                'reorder_level' => '10.000',
-            ])
-            ->assertSessionHasErrors('sku');
+        $this->actingAs($user);
+
+        $response = $this->post('/admin/products', [
+            'category_id' => $category->id,
+            'name' => 'Duplicate SKU',
+            'sku' => 'SKU-DUPLICATE-001',
+            'cost_price' => '100.00',
+            'selling_price' => '150.00',
+            'reorder_level' => '5',
+        ]);
+
+        $response->assertSessionHasErrors('sku');
     }
 
     public function test_quantity_cannot_be_changed_during_product_update(): void
     {
-        $user = User::factory()->stock()->create();
-        $product = Product::factory()
-            ->withQuantity(25)
-            ->create();
+        $user = User::factory()->create([
+            'role' => UserRole::STOCK->value,
+        ]);
 
-        $this->actingAs($user)
-            ->patch(route('admin.products.update', $product), [
-                'category_id' => $product->category_id,
-                'name' => 'Updated Product',
-                'sku' => $product->sku,
-                'cost_price' => '300.00',
-                'selling_price' => '400.00',
-                'reorder_level' => '5.000',
-                'quantity' => '999999.000',
-            ])
-            ->assertRedirect(route('admin.products.index'));
+        $category = Category::factory()->create();
 
-        $product->refresh();
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+            'quantity' => '10.000',
+        ]);
 
-        $this->assertSame('25.000', (string) $product->quantity);
-        $this->assertSame('Updated Product', $product->name);
+        $this->actingAs($user);
+
+        $response = $this->patch("/admin/products/{$product->id}", [
+            'category_id' => $category->id,
+            'name' => $product->name,
+            'sku' => $product->sku,
+            'cost_price' => '100.00',
+            'selling_price' => '150.00',
+            'reorder_level' => '5',
+            'quantity' => '9999',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect();
+
+        $this->assertSame(
+            '10.000',
+            (string) $product->fresh()->quantity
+        );
     }
 
     public function test_status_cannot_be_changed_during_product_update(): void
     {
-        $user = User::factory()->stock()->create();
+        $user = User::factory()->create([
+            'role' => UserRole::STOCK->value,
+        ]);
+
+        $category = Category::factory()->create();
+
         $product = Product::factory()->create([
+            'category_id' => $category->id,
             'status' => 'active',
         ]);
 
-        $this->actingAs($user)
-            ->patch(route('admin.products.update', $product), [
-                'category_id' => $product->category_id,
-                'name' => $product->name,
-                'sku' => $product->sku,
-                'cost_price' => '300.00',
-                'selling_price' => '400.00',
-                'reorder_level' => '5.000',
-                'status' => 'inactive',
-            ])
-            ->assertRedirect(route('admin.products.index'));
+        $this->actingAs($user);
 
-        $product->refresh();
+        $response = $this->patch("/admin/products/{$product->id}", [
+            'category_id' => $category->id,
+            'name' => $product->name,
+            'sku' => $product->sku,
+            'cost_price' => '100.00',
+            'selling_price' => '150.00',
+            'reorder_level' => '5',
+            'status' => 'inactive',
+        ]);
 
-        $this->assertSame('active', $product->status);
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect();
+
+        $this->assertSame(
+            'active',
+            $product->fresh()->status
+        );
+    }
+
+    public function test_inactive_category_cannot_be_used_for_new_product(): void
+    {
+        $user = User::factory()->create([
+            'role' => UserRole::STOCK->value,
+        ]);
+
+        $inactiveCategory = Category::factory()->inactive()->create();
+
+        $this->actingAs($user);
+
+        $response = $this->post('/admin/products', [
+            'category_id' => $inactiveCategory->id,
+            'name' => 'Inactive Category Product',
+            'sku' => 'SKU-INACTIVE-CAT-001',
+            'cost_price' => '100.00',
+            'selling_price' => '150.00',
+            'reorder_level' => '5',
+        ]);
+
+        $response->assertSessionHasErrors('category_id');
+
+        $this->assertDatabaseMissing('products', [
+            'sku' => 'SKU-INACTIVE-CAT-001',
+        ]);
+    }
+
+    public function test_existing_product_may_keep_its_current_inactive_category_but_cannot_switch_to_another_inactive_category(): void
+    {
+        $user = User::factory()->create([
+            'role' => UserRole::STOCK->value,
+        ]);
+
+        $currentCategory = Category::factory()->create();
+        $newInactiveCategory = Category::factory()->inactive()->create();
+
+        $product = Product::factory()->create([
+            'category_id' => $currentCategory->id,
+        ]);
+
+        $currentCategory->update([
+            'status' => 'inactive',
+        ]);
+
+        $this->actingAs($user);
+
+        $keepCurrentResponse = $this->patch("/admin/products/{$product->id}", [
+            'category_id' => $currentCategory->id,
+            'name' => $product->name,
+            'sku' => $product->sku,
+            'cost_price' => '100.00',
+            'selling_price' => '150.00',
+            'reorder_level' => '5',
+        ]);
+
+        $keepCurrentResponse->assertSessionHasNoErrors();
+        $keepCurrentResponse->assertRedirect();
+
+        $switchResponse = $this->patch("/admin/products/{$product->id}", [
+            'category_id' => $newInactiveCategory->id,
+            'name' => $product->name,
+            'sku' => $product->sku,
+            'cost_price' => '100.00',
+            'selling_price' => '150.00',
+            'reorder_level' => '5',
+        ]);
+
+        $switchResponse->assertSessionHasErrors('category_id');
+
+        $this->assertSame(
+            $currentCategory->id,
+            $product->fresh()->category_id
+        );
     }
 }
