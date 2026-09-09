@@ -6,7 +6,9 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\StockMovement;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use LogicException;
 use Tests\TestCase;
 
@@ -202,5 +204,35 @@ class StockMovementTest extends TestCase
         );
 
         $movement->delete();
+    }
+
+    public function test_mysql_database_rejects_an_invalid_movement_type(): void
+    {
+        if (DB::getDriverName() !== 'mysql') {
+            $this->markTestSkipped(
+                'The movement type CHECK constraint is MySQL-specific.'
+            );
+        }
+
+        $category = Category::factory()->create();
+
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+        ]);
+
+        $user = User::factory()->create();
+
+        $this->expectException(QueryException::class);
+
+        DB::table('stock_movements')->insert([
+            'product_id' => $product->id,
+            'movement_type' => 'hacked',
+            'quantity' => '1.000',
+            'quantity_before' => '0.000',
+            'quantity_after' => '1.000',
+            'created_by' => $user->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 }

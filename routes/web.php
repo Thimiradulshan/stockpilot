@@ -36,6 +36,13 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('role:admin,stock')
         ->name('admin.products.update');
 
+    Route::patch('admin/products/{product}/stock', [
+        ProductController::class,
+        'adjustStock',
+    ])
+        ->middleware('role:admin,stock')
+        ->name('admin.products.stock.adjust');
+
     Route::get('admin/customers', [CustomerController::class, 'index'])
         ->middleware('role:admin,sales')
         ->name('admin.customers.index');

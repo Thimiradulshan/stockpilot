@@ -2,9 +2,11 @@
 
 namespace Tests\Feature\Security;
 
+use App\Enums\StockMovementType;
 use App\Enums\UserRole;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\StockMovement;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -448,6 +450,262 @@ class ProductWriteSecurityTest extends TestCase
         $this->assertSame(
             $currentCategory->id,
             $product->fresh()->category_id
+        );
+    }
+
+    public function test_guest_cannot_adjust_stock(): void
+    {
+        $product = Product::factory()->create([
+            'quantity' => '10.000',
+        ]);
+
+        $response = $this->patch(
+            "/admin/products/{$product->id}/stock",
+            [
+                'signed_quantity' => '5.000',
+                'reason' => 'Manual correction',
+            ]
+        );
+
+        $response->assertRedirect(route('login'));
+
+        $this->assertSame(
+            '10.000',
+            (string) $product->fresh()->quantity
+        );
+
+        $this->assertDatabaseCount('stock_movements', 0);
+    }
+
+    public function test_sales_user_cannot_adjust_stock(): void
+    {
+        $user = User::factory()->sales()->create();
+
+        $product = Product::factory()->create([
+            'quantity' => '10.000',
+        ]);
+
+        $this->actingAs($user);
+
+        $response = $this->patch(
+            "/admin/products/{$product->id}/stock",
+            [
+                'signed_quantity' => '5.000',
+                'reason' => 'Unauthorized adjustment',
+            ]
+        );
+
+        $response->assertForbidden();
+
+        $this->assertSame(
+            '10.000',
+            (string) $product->fresh()->quantity
+        );
+
+        $this->assertDatabaseCount('stock_movements', 0);
+    }
+
+    public function test_inactive_stock_user_cannot_adjust_stock(): void
+    {
+        $user = User::factory()
+            ->stock()
+            ->inactive()
+            ->create();
+
+        $product = Product::factory()->create([
+            'quantity' => '10.000',
+        ]);
+
+        $this->actingAs($user);
+
+        $response = $this->patch(
+            "/admin/products/{$product->id}/stock",
+            [
+                'signed_quantity' => '5.000',
+                'reason' => 'Inactive user adjustment',
+            ]
+        );
+
+        $response->assertForbidden();
+
+        $this->assertSame(
+            '10.000',
+            (string) $product->fresh()->quantity
+        );
+
+        $this->assertDatabaseCount('stock_movements', 0);
+    }
+
+    public function test_stock_user_can_adjust_stock(): void
+    {
+        $user = User::factory()->stock()->create();
+
+        $product = Product::factory()->create([
+            'quantity' => '10.000',
+        ]);
+
+        $this->actingAs($user);
+
+        $response = $this->patch(
+            "/admin/products/{$product->id}/stock",
+            [
+                'signed_quantity' => '5.250',
+                'reason' => 'Opening stock correction',
+                'notes' => 'Verified against physical count.',
+            ]
+        );
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect(route('admin.products.index'));
+
+        $this->assertSame(
+            '15.250',
+            (string) $product->fresh()->quantity
+        );
+
+        $this->assertDatabaseHas('stock_movements', [
+            'product_id' => $product->id,
+            'movement_type' => StockMovementType::ADJUSTMENT->value,
+            'quantity' => '5.250',
+            'quantity_before' => '10.000',
+            'quantity_after' => '15.250',
+            'reason' => 'Opening stock correction',
+            'notes' => 'Verified against physical count.',
+            'created_by' => $user->id,
+        ]);
+    }
+
+    public function test_admin_can_adjust_stock(): void
+    {
+        $user = User::factory()->admin()->create();
+
+        $product = Product::factory()->create([
+            'quantity' => '20.000',
+        ]);
+
+        $this->actingAs($user);
+
+        $response = $this->patch(
+            "/admin/products/{$product->id}/stock",
+            [
+                'signed_quantity' => '-3.500',
+                'reason' => 'Physical count correction',
+            ]
+        );
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect(route('admin.products.index'));
+
+        $this->assertSame(
+            '16.500',
+            (string) $product->fresh()->quantity
+        );
+
+        $this->assertDatabaseHas('stock_movements', [
+            'product_id' => $product->id,
+            'movement_type' => StockMovementType::ADJUSTMENT->value,
+            'quantity' => '-3.500',
+            'quantity_before' => '20.000',
+            'quantity_after' => '16.500',
+            'reason' => 'Physical count correction',
+            'created_by' => $user->id,
+        ]);
+    }
+
+    public function test_zero_stock_adjustment_is_rejected(): void
+    {
+        $user = User::factory()->stock()->create();
+
+        $product = Product::factory()->create([
+            'quantity' => '10.000',
+        ]);
+
+        $this->actingAs($user);
+
+        foreach ([
+            '0',
+            '0.0',
+            '0.00',
+            '0.000',
+            '-0',
+            '-0.0',
+            '-0.00',
+            '-0.000',
+        ] as $zeroValue) {
+            $response = $this->patch(
+                "/admin/products/{$product->id}/stock",
+                [
+                    'signed_quantity' => $zeroValue,
+                    'reason' => 'Zero adjustment',
+                ]
+            );
+
+            $response->assertSessionHasErrors('signed_quantity');
+        }
+
+        $this->assertSame(
+            '10.000',
+            (string) $product->fresh()->quantity
+        );
+
+        $this->assertDatabaseCount('stock_movements', 0);
+    }
+
+    public function test_stock_adjustment_with_more_than_three_decimal_places_is_rejected(): void
+    {
+        $user = User::factory()->stock()->create();
+
+        $product = Product::factory()->create([
+            'quantity' => '10.000',
+        ]);
+
+        $this->actingAs($user);
+
+        $response = $this->patch(
+            "/admin/products/{$product->id}/stock",
+            [
+                'signed_quantity' => '1.1234',
+                'reason' => 'Precision attack',
+            ]
+        );
+
+        $response->assertSessionHasErrors('signed_quantity');
+
+        $this->assertSame(
+            '10.000',
+            (string) $product->fresh()->quantity
+        );
+
+        $this->assertDatabaseCount('stock_movements', 0);
+    }
+
+    public function test_movement_type_cannot_be_supplied_to_stock_adjustment_endpoint(): void
+    {
+        $user = User::factory()->stock()->create();
+
+        $product = Product::factory()->create([
+            'quantity' => '10.000',
+        ]);
+
+        $this->actingAs($user);
+
+        $response = $this->patch(
+            "/admin/products/{$product->id}/stock",
+            [
+                'signed_quantity' => '5.000',
+                'movement_type' => 'purchase',
+                'reason' => 'Movement type injection',
+            ]
+        );
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect();
+
+        $movement = StockMovement::query()->latest('id')->firstOrFail();
+
+        $this->assertSame(
+            StockMovementType::ADJUSTMENT,
+            $movement->movement_type
         );
     }
 }

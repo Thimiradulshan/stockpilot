@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\StockMovementType;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StockAdjustmentRequest;
 use App\Http\Requests\Admin\StoreProductRequest;
 use App\Http\Requests\Admin\UpdateProductRequest;
 use App\Models\Product;
+use App\Services\StockService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 
@@ -63,6 +66,30 @@ class ProductController extends Controller
             'reorder_level' => $data['reorder_level'],
             'description' => $data['description'] ?? null,
         ]);
+
+        return to_route('admin.products.index');
+    }
+
+    /**
+     * Apply a manual stock adjustment.
+     */
+    public function adjustStock(
+        StockAdjustmentRequest $request,
+        Product $product,
+        StockService $stockService,
+    ): RedirectResponse {
+        $this->authorize('adjustStock', $product);
+
+        $data = $request->validated();
+
+        $stockService->adjust(
+            product: $product,
+            signedQuantity: $data['signed_quantity'],
+            actor: $request->user(),
+            movementType: StockMovementType::ADJUSTMENT,
+            reason: $data['reason'],
+            notes: $data['notes'] ?? null,
+        );
 
         return to_route('admin.products.index');
     }
