@@ -16,7 +16,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'sku',
     'cost_price',
     'selling_price',
-    'quantity',
     'reorder_level',
     'description',
     'status',

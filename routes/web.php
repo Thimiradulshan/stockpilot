@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +27,22 @@ Route::middleware(['auth'])->group(function () {
     Route::get('security-test/stock', fn () => 'stock-area')
         ->middleware('role:stock')
         ->name('security.test.stock');
+
+    Route::get('admin/categories', [CategoryController::class, 'index'])
+        ->middleware('role:admin,stock')
+        ->name('admin.categories.index');
+
+    Route::get('admin/suppliers', [SupplierController::class, 'index'])
+        ->middleware('role:admin,stock')
+        ->name('admin.suppliers.index');
+
+    Route::get('admin/products', [ProductController::class, 'index'])
+        ->middleware('role:admin,stock')
+        ->name('admin.products.index');
+
+    Route::get('admin/customers', [CustomerController::class, 'index'])
+        ->middleware('role:admin,sales')
+        ->name('admin.customers.index');
 });
 
 require __DIR__.'/settings.php';
