@@ -1,10 +1,7 @@
 @import 'tailwindcss';
-@import '../../vendor/livewire/flux/dist/flux.css';
 
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../vendor/livewire/flux-pro/stubs/**/*.blade.php';
-@source '../../vendor/livewire/flux/stubs/**/*.blade.php';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -16,9 +13,9 @@
     | StockPilot semantic color tokens
     |--------------------------------------------------------------------------
     |
-    | Components should use these semantic colors rather than hard-coded
-    | hexadecimal values. Dark mode changes the underlying tokens while
-    | keeping the component classes identical.
+    | Components should use semantic colors rather than hard-coded values.
+    | Light/dark themes change the underlying tokens while keeping component
+    | classes stable.
     |
     */
 
@@ -53,34 +50,6 @@
 
     --color-sp-info: var(--sp-info);
     --color-sp-info-foreground: var(--sp-info-foreground);
-
-    /*
-    |--------------------------------------------------------------------------
-    | Flux accent integration
-    |--------------------------------------------------------------------------
-    */
-
-    --color-accent: var(--sp-primary);
-    --color-accent-content: var(--sp-primary);
-    --color-accent-foreground: var(--sp-primary-foreground);
-
-    /*
-    |--------------------------------------------------------------------------
-    | Keep Flux / starter-kit zinc tokens available
-    |--------------------------------------------------------------------------
-    */
-
-    --color-zinc-50: #fafafa;
-    --color-zinc-100: #f4f5f4;
-    --color-zinc-200: #e5e7e6;
-    --color-zinc-300: #d2d7d5;
-    --color-zinc-400: #a7b0ad;
-    --color-zinc-500: #75827e;
-    --color-zinc-600: #586661;
-    --color-zinc-700: #414d49;
-    --color-zinc-800: #2d3835;
-    --color-zinc-900: #202926;
-    --color-zinc-950: #131917;
 }
 
 /*
@@ -130,10 +99,6 @@
     |--------------------------------------------------------------------------
     | StockPilot dark theme
     |--------------------------------------------------------------------------
-    |
-    | We do not simply invert the light palette. Surfaces become dark while
-    | the brand colors remain recognizable and usable for actions/navigation.
-    |
     */
 
     .dark {
@@ -215,27 +180,14 @@
     [role='button'] {
         -webkit-tap-highlight-color: transparent;
     }
+
+    :focus-visible {
+        outline: 2px solid var(--sp-primary);
+        outline-offset: 2px;
+    }
 }
-
-/*
-|--------------------------------------------------------------------------
-| Flux field normalization
-|--------------------------------------------------------------------------
-*/
-
-[data-flux-field]:not(ui-radio, ui-checkbox) {
-    @apply grid gap-2;
-}
-
-[data-flux-label] {
-    @apply !mb-0 !leading-tight;
-}
-
-input:focus[data-flux-control],
-textarea:focus[data-flux-control],
-select:focus[data-flux-control] {
-    @apply outline-hidden ring-2 ring-accent ring-offset-2;
-    ring-offset-color: var(--sp-background);
+[x-cloak] {
+    display: none !important;
 }
 
 /*
@@ -245,7 +197,7 @@ select:focus[data-flux-control] {
 */
 
 @utility sp-page {
-    @apply w-full max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8;
+    @apply mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8;
 }
 
 @utility sp-surface {

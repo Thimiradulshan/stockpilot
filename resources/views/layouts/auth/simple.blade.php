@@ -1,29 +1,55 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html
+    lang="{{ str_replace('_', '-', app()->getLocale()) }}"
+    x-data
+    x-bind:class="$store.theme?.theme === 'dark' ? 'dark' : ''"
+>
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white antialiased dark:bg-linear-to-b dark:from-neutral-950 dark:to-neutral-900">
-        <div class="bg-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
-            <div class="flex w-full max-w-sm flex-col gap-2">
-                <a href="{{ route('home') }}" class="flex flex-col items-center gap-2 font-medium" wire:navigate>
-                    <span class="flex h-9 w-9 mb-1 items-center justify-center rounded-md">
-                        <x-app-logo-icon class="size-9 fill-current text-black dark:text-white" />
-                    </span>
-                    <span class="sr-only">{{ config('app.name', 'Laravel') }}</span>
-                </a>
-                <div class="flex flex-col gap-6">
-                    {{ $slot }}
-                </div>
+
+    <body class="min-h-screen bg-sp-background text-sp-text antialiased dark:bg-sp-dark-background dark:text-sp-dark-text">
+        <div class="relative flex min-h-svh items-center justify-center overflow-hidden px-4 py-10 sm:px-6 lg:px-8">
+
+            {{-- Subtle brand background accents --}}
+            <div
+                aria-hidden="true"
+                class="pointer-events-none absolute inset-0 overflow-hidden"
+            >
+                <div class="absolute -left-32 -top-32 h-80 w-80 rounded-full bg-sp-primary/10 blur-3xl"></div>
+                <div class="absolute -bottom-32 -right-32 h-80 w-80 rounded-full bg-sp-brand/10 blur-3xl"></div>
             </div>
+
+            <main class="relative z-10 w-full max-w-md">
+                <div class="mb-8 flex flex-col items-center">
+                    <a
+                        href="{{ route('home') }}"
+                        wire:navigate
+                        class="group inline-flex flex-col items-center gap-3"
+                        aria-label="{{ config('app.name', 'StockPilot') }}"
+                    >
+                        <x-app-logo
+                            class="h-12 w-12 transition-transform duration-200 group-hover:scale-105"
+                        />
+
+                        <span class="text-xl font-bold tracking-tight text-sp-brand dark:text-white">
+                            {{ config('app.name', 'StockPilot') }}
+                        </span>
+                    </a>
+                </div>
+
+                <section
+                    class="rounded-2xl border border-sp-border bg-white p-6 shadow-xl shadow-black/5 sm:p-8 dark:border-sp-dark-border dark:bg-sp-dark-surface dark:shadow-black/20"
+                >
+                    {{ $slot }}
+                </section>
+
+                <p class="mt-6 text-center text-xs text-sp-muted dark:text-sp-dark-muted">
+                    {{ config('app.name', 'StockPilot') }}
+                    &middot;
+                    Sales, Inventory &amp; Business Management
+                </p>
+            </main>
         </div>
-
-        @persist('toast')
-            <flux:toast.group>
-                <flux:toast />
-            </flux:toast.group>
-        @endpersist
-
-        @fluxScripts
     </body>
 </html>
