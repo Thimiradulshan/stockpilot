@@ -1,31 +1,64 @@
 <x-layouts::auth :title="__('Forgot password')">
-    <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Forgot password')" :description="__('Enter your email to receive a password reset link')" />
+    <div class="flex flex-col gap-7">
+        <x-auth-header
+            :title="__('Forgot password')"
+            :description="__('Enter your email to receive a password reset link')"
+        />
 
-        <!-- Session Status -->
-        <x-auth-session-status class="text-center" :status="session('status')" />
+        <x-auth-session-status
+            class="text-center"
+            :status="session('status')"
+        />
 
-        <form method="POST" action="{{ route('password.email') }}" class="flex flex-col gap-6">
+        @if ($errors->any())
+            <x-stockpilot.alert type="danger">
+                <p class="font-medium">
+                    {{ __('Please check the following and try again.') }}
+                </p>
+
+                <ul class="mt-2 list-disc space-y-1 ps-5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </x-stockpilot.alert>
+        @endif
+
+        <form
+            method="POST"
+            action="{{ route('password.email') }}"
+            class="flex flex-col gap-5"
+        >
             @csrf
 
-            <!-- Email Address -->
-            <flux:input
+            <x-stockpilot.input
                 name="email"
                 :label="__('Email address')"
                 type="email"
                 required
                 autofocus
+                autocomplete="email"
                 placeholder="email@example.com"
             />
 
-            <flux:button variant="primary" type="submit" class="w-full" data-test="email-password-reset-link-button">
+            <x-stockpilot.button
+                variant="primary"
+                type="submit"
+                class="w-full"
+                data-test="email-password-reset-link-button"
+            >
                 {{ __('Email password reset link') }}
-            </flux:button>
+            </x-stockpilot.button>
         </form>
 
-        <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-400">
+        <div class="text-center text-sm text-sp-text-muted">
             <span>{{ __('Or, return to') }}</span>
-            <flux:link :href="route('login')" wire:navigate>{{ __('log in') }}</flux:link>
+            <x-stockpilot.link
+                :href="route('login')"
+                wire:navigate
+            >
+                {{ __('log in') }}
+            </x-stockpilot.link>
         </div>
     </div>
 </x-layouts::auth>
