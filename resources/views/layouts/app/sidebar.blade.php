@@ -1,387 +1,343 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html
+    lang="{{ str_replace('_', '-', app()->getLocale()) }}"
+    x-data="{ sidebarCollapsed: localStorage.getItem('stockpilot-sidebar') === 'collapsed', mobileSidebarOpen: false }"
+>
     <head>
         @include('partials.head')
     </head>
 
     <body class="min-h-screen bg-sp-background text-sp-text antialiased">
-        <flux:sidebar
-            sticky
-            collapsible
-            class="border-e border-white/10 bg-sp-brand-dark text-white"
-        >
-            {{-- Brand --}}
-            <flux:sidebar.header class="border-b border-white/10 px-3">
-                <x-app-logo
-                    :sidebar="true"
-                    href="{{ route('dashboard') }}"
-                    wire:navigate
-                />
+        <div class="min-h-screen">
 
-                <flux:sidebar.collapse
-                    class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2 text-white/75 hover:bg-white/10 hover:text-white"
-                />
-            </flux:sidebar.header>
+            {{-- Mobile overlay --}}
+            <div
+                x-cloak
+                x-show="mobileSidebarOpen"
+                x-transition.opacity
+                class="fixed inset-0 z-40 bg-black/40 lg:hidden"
+                x-on:click="mobileSidebarOpen = false"
+                aria-hidden="true"
+            ></div>
 
-            {{-- Navigation --}}
-            <flux:sidebar.nav class="px-2 py-4">
-                {{-- Workspace label --}}
-                <div class="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-white/50 in-data-flux-sidebar-collapsed-desktop:hidden">
-                    {{ __('Workspace') }}
-                </div>
-
-                {{-- Dashboard --}}
-                <flux:sidebar.item
-                    icon="home"
-                    :href="route('dashboard')"
-                    :current="request()->routeIs('dashboard')"
-                    wire:navigate
-                    tooltip="{{ __('Dashboard') }}"
-                    class="!text-white/80 hover:!bg-white/10 hover:!text-white data-current:!bg-sp-primary data-current:!text-white"
-                >
-                    {{ __('Dashboard') }}
-                </flux:sidebar.item>
-
-                {{-- Products --}}
-                @can('viewAny', App\Models\Product::class)
-                    <flux:sidebar.item
-                        icon="cube"
-                        :href="route('admin.products.index')"
-                        :current="request()->routeIs('admin.products.*')"
-                        wire:navigate
-                        tooltip="{{ __('Products') }}"
-                        class="!text-white/80 hover:!bg-white/10 hover:!text-white data-current:!bg-sp-primary data-current:!text-white"
-                    >
-                        {{ __('Products') }}
-                    </flux:sidebar.item>
-                @endcan
-
-                {{-- Suppliers --}}
-                @can('viewAny', App\Models\Supplier::class)
-                    <flux:sidebar.item
-                        icon="truck"
-                        :href="route('admin.suppliers.index')"
-                        :current="request()->routeIs('admin.suppliers.*')"
-                        wire:navigate
-                        tooltip="{{ __('Suppliers') }}"
-                        class="!text-white/80 hover:!bg-white/10 hover:!text-white data-current:!bg-sp-primary data-current:!text-white"
-                    >
-                        {{ __('Suppliers') }}
-                    </flux:sidebar.item>
-                @endcan
-
-                {{-- Customers --}}
-                @can('viewAny', App\Models\Customer::class)
-                    <flux:sidebar.item
-                        icon="users"
-                        :href="route('admin.customers.index')"
-                        :current="request()->routeIs('admin.customers.*')"
-                        wire:navigate
-                        tooltip="{{ __('Customers') }}"
-                        class="!text-white/80 hover:!bg-white/10 hover:!text-white data-current:!bg-sp-primary data-current:!text-white"
-                    >
-                        {{ __('Customers') }}
-                    </flux:sidebar.item>
-                @endcan
-
-                {{-- Operations label --}}
-                @can('viewAny', App\Models\Purchase::class)
-                    <div class="mt-6 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-white/50 in-data-flux-sidebar-collapsed-desktop:hidden">
-                        {{ __('Operations') }}
-                    </div>
-
-                    <flux:sidebar.item
-                        icon="shopping-cart"
-                        :href="route('admin.purchases.index')"
-                        :current="request()->routeIs('admin.purchases.*')"
-                        wire:navigate
-                        tooltip="{{ __('Purchasing') }}"
-                        class="!text-white/80 hover:!bg-white/10 hover:!text-white data-current:!bg-sp-primary data-current:!text-white"
-                    >
-                        {{ __('Purchasing') }}
-                    </flux:sidebar.item>
-                @endcan
-
-                {{-- Administration label --}}
-                @can('viewAny', App\Models\User::class)
-                    <div class="mt-6 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-white/50 in-data-flux-sidebar-collapsed-desktop:hidden">
-                        {{ __('Administration') }}
-                    </div>
-
-                    <flux:sidebar.item
-                        icon="user-group"
-                        :href="route('admin.users.index')"
-                        :current="request()->routeIs('admin.users.*')"
-                        wire:navigate
-                        tooltip="{{ __('Users') }}"
-                        class="!text-white/80 hover:!bg-white/10 hover:!text-white data-current:!bg-sp-primary data-current:!text-white"
-                    >
-                        {{ __('Users') }}
-                    </flux:sidebar.item>
-                @endcan
-            </flux:sidebar.nav>
-
-            <flux:sidebar.spacer />
-
-            {{-- Footer navigation --}}
-            <flux:sidebar.nav class="border-t border-white/10 px-2 py-3">
-                <flux:sidebar.item
-                    icon="cog-6-tooth"
-                    :href="route('profile.edit')"
-                    :current="request()->routeIs('profile.*')"
-                    wire:navigate
-                    tooltip="{{ __('Settings') }}"
-                    class="!text-white/80 hover:!bg-white/10 hover:!text-white data-current:!bg-sp-primary data-current:!text-white"
-                >
-                    {{ __('Settings') }}
-                </flux:sidebar.item>
-            </flux:sidebar.nav>
-
-            {{-- User area --}}
-            <div class="border-t border-white/10 p-2">
-                <x-desktop-user-menu class="hidden lg:block" />
-            </div>
-        </flux:sidebar>
-
-        {{-- Desktop header --}}
-        <flux:header
-            class="hidden border-b border-sp-border bg-sp-surface lg:flex"
-        >
-            <div class="flex min-w-0 flex-1 items-center">
-                <div class="min-w-0">
-                    <div class="truncate text-sm font-semibold text-sp-text">
-                        {{ config('app.name', 'StockPilot') }}
-                    </div>
-
-                    <div class="truncate text-xs text-sp-text-muted">
-                        Sales, inventory & business management
-                    </div>
-                </div>
-            </div>
-
-            <flux:spacer />
-
-            <div class="flex items-center gap-1">
-                <flux:tooltip
-                    :content="__('Appearance')"
-                    position="bottom"
-                >
-                    <flux:dropdown
-                        x-data
-                        align="end"
-                    >
-                        <flux:button
-                            variant="subtle"
-                            square
-                            aria-label="{{ __('Appearance') }}"
-                        >
-                            <flux:icon.sun
-                                x-show="$flux.appearance === 'light'"
-                                variant="mini"
-                            />
-
-                            <flux:icon.moon
-                                x-show="$flux.appearance === 'dark'"
-                                variant="mini"
-                            />
-
-                            <flux:icon.moon
-                                x-show="$flux.appearance === 'system' && $flux.dark"
-                                variant="mini"
-                            />
-
-                            <flux:icon.sun
-                                x-show="$flux.appearance === 'system' && ! $flux.dark"
-                                variant="mini"
-                            />
-                        </flux:button>
-
-                        <flux:menu>
-                            <flux:menu.item
-                                icon="sun"
-                                x-on:click="$flux.appearance = 'light'"
-                            >
-                                {{ __('Light') }}
-                            </flux:menu.item>
-
-                            <flux:menu.item
-                                icon="moon"
-                                x-on:click="$flux.appearance = 'dark'"
-                            >
-                                {{ __('Dark') }}
-                            </flux:menu.item>
-
-                            <flux:menu.item
-                                icon="computer-desktop"
-                                x-on:click="$flux.appearance = 'system'"
-                            >
-                                {{ __('System') }}
-                            </flux:menu.item>
-                        </flux:menu>
-                    </flux:dropdown>
-                </flux:tooltip>
-
-                <flux:tooltip
-                    :content="__('Notifications')"
-                    position="bottom"
-                >
-                    <flux:button
-                        variant="subtle"
-                        square
-                        icon="bell"
-                        aria-label="{{ __('Notifications') }}"
-                    />
-                </flux:tooltip>
-
-                <flux:tooltip
-                    :content="__('Settings')"
-                    position="bottom"
-                >
-                    <flux:button
-                        variant="subtle"
-                        square
-                        icon="cog-6-tooth"
-                        :href="route('profile.edit')"
-                        wire:navigate
-                        aria-label="{{ __('Settings') }}"
-                    />
-                </flux:tooltip>
-            </div>
-
-            <div class="ms-3 border-s border-sp-border ps-3">
-                <x-desktop-user-menu />
-            </div>
-        </flux:header>
-
-        {{-- Mobile header --}}
-        <flux:header
-            class="border-b border-sp-border bg-sp-surface lg:hidden"
-        >
-            <flux:sidebar.toggle
-                icon="bars-2"
-                inset="left"
-            />
-
-            <x-app-logo
-                href="{{ route('dashboard') }}"
-                wire:navigate
-            />
-
-            <flux:spacer />
-
-            <flux:dropdown
-                x-data
-                align="end"
+            {{-- Sidebar --}}
+            <aside
+                class="fixed inset-y-0 start-0 z-50 flex flex-col bg-sp-brand-dark text-white shadow-xl transition-[width,transform] duration-200 lg:translate-x-0"
+                :class="[
+                    sidebarCollapsed ? 'lg:w-20' : 'lg:w-64',
+                    mobileSidebarOpen ? 'translate-x-0 w-72' : '-translate-x-full lg:translate-x-0'
+                ]"
+                aria-label="{{ __('Main navigation') }}"
             >
-                <flux:button
-                    variant="subtle"
-                    square
-                    aria-label="{{ __('Appearance') }}"
-                >
-                    <flux:icon.sun
-                        x-show="$flux.appearance === 'light'"
-                        variant="mini"
-                    />
-
-                    <flux:icon.moon
-                        x-show="$flux.appearance === 'dark'"
-                        variant="mini"
-                    />
-
-                    <flux:icon.moon
-                        x-show="$flux.appearance === 'system' && $flux.dark"
-                        variant="mini"
-                    />
-
-                    <flux:icon.sun
-                        x-show="$flux.appearance === 'system' && ! $flux.dark"
-                        variant="mini"
-                    />
-                </flux:button>
-
-                <flux:menu>
-                    <flux:menu.item
-                        icon="sun"
-                        x-on:click="$flux.appearance = 'light'"
+                {{-- Brand --}}
+                <div class="flex h-16 shrink-0 items-center border-b border-white/10 px-3">
+                    <a
+                        href="{{ route('dashboard') }}"
+                        wire:navigate
+                        class="flex min-w-0 flex-1 items-center gap-3"
+                        aria-label="{{ config('app.name', 'StockPilot') }}"
                     >
-                        {{ __('Light') }}
-                    </flux:menu.item>
+                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-sp-brand-dark shadow-sm">
+                            <x-app-logo-icon class="h-6 w-6" />
+                        </span>
 
-                    <flux:menu.item
-                        icon="moon"
-                        x-on:click="$flux.appearance = 'dark'"
+                        <span
+                            x-show="!sidebarCollapsed"
+                            x-transition.opacity
+                            class="truncate text-lg font-bold tracking-tight"
+                        >
+                            {{ config('app.name', 'StockPilot') }}
+                        </span>
+                    </a>
+
+                    <button
+                        type="button"
+                        x-on:click="
+                            sidebarCollapsed = !sidebarCollapsed;
+                            localStorage.setItem('stockpilot-sidebar', sidebarCollapsed ? 'collapsed' : 'expanded');
+                        "
+                        class="hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 lg:flex"
+                        :aria-label="sidebarCollapsed ? '{{ __('Expand sidebar') }}' : '{{ __('Collapse sidebar') }}'"
                     >
-                        {{ __('Dark') }}
-                    </flux:menu.item>
+                        <x-stockpilot.icon
+                            name="chevron-right"
+                            class="h-5 w-5 transition-transform"
+                            x-bind:class="{ 'rotate-180': !sidebarCollapsed }"
+                        />
+                    </button>
 
-                    <flux:menu.item
-                        icon="computer-desktop"
-                        x-on:click="$flux.appearance = 'system'"
+                    <button
+                        type="button"
+                        x-on:click="mobileSidebarOpen = false"
+                        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white lg:hidden"
+                        aria-label="{{ __('Close navigation') }}"
                     >
-                        {{ __('System') }}
-                    </flux:menu.item>
-                </flux:menu>
-            </flux:dropdown>
+                        <x-stockpilot.icon name="x" class="h-5 w-5" />
+                    </button>
+                </div>
 
-            <flux:dropdown align="end">
-                <flux:profile
-                    :initials="auth()->user()->initials()"
-                />
-
-                <flux:menu>
-                    <div class="px-3 py-2">
-                        <div class="text-sm font-medium text-sp-text">
-                            {{ auth()->user()->name }}
-                        </div>
-
-                        <div class="max-w-48 truncate text-xs text-sp-text-muted">
-                            {{ auth()->user()->email }}
-                        </div>
+                {{-- Navigation --}}
+                <nav class="flex-1 overflow-y-auto px-3 py-5">
+                    <div
+                        x-show="!sidebarCollapsed"
+                        class="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/40"
+                    >
+                        {{ __('Workspace') }}
                     </div>
 
-                    <flux:menu.separator />
-
-                    <flux:menu.item
-                        :href="route('profile.edit')"
-                        icon="cog-6-tooth"
+                    {{-- Dashboard --}}
+                    <a
+                        href="{{ route('dashboard') }}"
                         wire:navigate
+                        x-on:click="mobileSidebarOpen = false"
+                        @class([
+                            'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition',
+                            'bg-sp-primary text-white shadow-sm' => request()->routeIs('dashboard'),
+                            'text-white/75 hover:bg-white/10 hover:text-white' => ! request()->routeIs('dashboard'),
+                        ])
+                        :title="sidebarCollapsed ? '{{ __('Dashboard') }}' : null"
                     >
-                        {{ __('Settings') }}
-                    </flux:menu.item>
+                        <x-stockpilot.icon name="dashboard" class="h-5 w-5 shrink-0" />
+                        <span x-show="!sidebarCollapsed" class="truncate">{{ __('Dashboard') }}</span>
+                    </a>
 
-                    <flux:menu.separator />
-
-                    <form
-                        method="POST"
-                        action="{{ route('logout') }}"
-                        class="w-full"
-                    >
-                        @csrf
-
-                        <flux:menu.item
-                            as="button"
-                            type="submit"
-                            icon="arrow-right-start-on-rectangle"
-                            class="w-full cursor-pointer"
+                    {{-- Products --}}
+                    @can('viewAny', App\Models\Product::class)
+                        <a
+                            href="{{ route('admin.products.index') }}"
+                            wire:navigate
+                            x-on:click="mobileSidebarOpen = false"
+                            @class([
+                                'mt-1 group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition',
+                                'bg-sp-primary text-white shadow-sm' => request()->routeIs('admin.products.*'),
+                                'text-white/75 hover:bg-white/10 hover:text-white' => ! request()->routeIs('admin.products.*'),
+                            ])
+                            :title="sidebarCollapsed ? '{{ __('Products') }}' : null"
                         >
-                            {{ __('Log out') }}
-                        </flux:menu.item>
-                    </form>
-                </flux:menu>
-            </flux:dropdown>
-        </flux:header>
+                            <x-stockpilot.icon name="products" class="h-5 w-5 shrink-0" />
+                            <span x-show="!sidebarCollapsed" class="truncate">{{ __('Products') }}</span>
+                        </a>
+                    @endcan
 
-        {{-- Application content --}}
-        <flux:main class="min-w-0 bg-sp-background">
-            {{ $slot }}
-        </flux:main>
+                    {{-- Suppliers --}}
+                    @can('viewAny', App\Models\Supplier::class)
+                        <a
+                            href="{{ route('admin.suppliers.index') }}"
+                            wire:navigate
+                            x-on:click="mobileSidebarOpen = false"
+                            @class([
+                                'mt-1 group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition',
+                                'bg-sp-primary text-white shadow-sm' => request()->routeIs('admin.suppliers.*'),
+                                'text-white/75 hover:bg-white/10 hover:text-white' => ! request()->routeIs('admin.suppliers.*'),
+                            ])
+                            :title="sidebarCollapsed ? '{{ __('Suppliers') }}' : null"
+                        >
+                            <x-stockpilot.icon name="suppliers" class="h-5 w-5 shrink-0" />
+                            <span x-show="!sidebarCollapsed" class="truncate">{{ __('Suppliers') }}</span>
+                        </a>
+                    @endcan
 
-        @persist('toast')
-            <flux:toast.group>
-                <flux:toast />
-            </flux:toast.group>
-        @endpersist
+                    {{-- Customers --}}
+                    @can('viewAny', App\Models\Customer::class)
+                        <a
+                            href="{{ route('admin.customers.index') }}"
+                            wire:navigate
+                            x-on:click="mobileSidebarOpen = false"
+                            @class([
+                                'mt-1 group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition',
+                                'bg-sp-primary text-white shadow-sm' => request()->routeIs('admin.customers.*'),
+                                'text-white/75 hover:bg-white/10 hover:text-white' => ! request()->routeIs('admin.customers.*'),
+                            ])
+                            :title="sidebarCollapsed ? '{{ __('Customers') }}' : null"
+                        >
+                            <x-stockpilot.icon name="customers" class="h-5 w-5 shrink-0" />
+                            <span x-show="!sidebarCollapsed" class="truncate">{{ __('Customers') }}</span>
+                        </a>
+                    @endcan
 
-        @fluxScripts
+                    @can('viewAny', App\Models\Purchase::class)
+                        <div
+                            x-show="!sidebarCollapsed"
+                            class="mt-7 px-3 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/40"
+                        >
+                            {{ __('Operations') }}
+                        </div>
+
+                        <a
+                            href="{{ route('admin.purchases.index') }}"
+                            wire:navigate
+                            x-on:click="mobileSidebarOpen = false"
+                            @class([
+                                'mt-1 group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition',
+                                'bg-sp-primary text-white shadow-sm' => request()->routeIs('admin.purchases.*'),
+                                'text-white/75 hover:bg-white/10 hover:text-white' => ! request()->routeIs('admin.purchases.*'),
+                            ])
+                            :title="sidebarCollapsed ? '{{ __('Purchasing') }}' : null"
+                        >
+                            <x-stockpilot.icon name="purchasing" class="h-5 w-5 shrink-0" />
+                            <span x-show="!sidebarCollapsed" class="truncate">{{ __('Purchasing') }}</span>
+                        </a>
+                    @endcan
+
+                    @can('viewAny', App\Models\User::class)
+                        <div
+                            x-show="!sidebarCollapsed"
+                            class="mt-7 px-3 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/40"
+                        >
+                            {{ __('Administration') }}
+                        </div>
+
+                        <a
+                            href="{{ route('admin.users.index') }}"
+                            wire:navigate
+                            x-on:click="mobileSidebarOpen = false"
+                            @class([
+                                'mt-1 group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition',
+                                'bg-sp-primary text-white shadow-sm' => request()->routeIs('admin.users.*'),
+                                'text-white/75 hover:bg-white/10 hover:text-white' => ! request()->routeIs('admin.users.*'),
+                            ])
+                            :title="sidebarCollapsed ? '{{ __('Users') }}' : null"
+                        >
+                            <x-stockpilot.icon name="users" class="h-5 w-5 shrink-0" />
+                            <span x-show="!sidebarCollapsed" class="truncate">{{ __('Users') }}</span>
+                        </a>
+                    @endcan
+                </nav>
+
+                {{-- Footer --}}
+                <div class="shrink-0 border-t border-white/10 p-3">
+                    <a
+                        href="{{ route('profile.edit') }}"
+                        wire:navigate
+                        x-on:click="mobileSidebarOpen = false"
+                        @class([
+                            'mb-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition',
+                            'bg-sp-primary text-white shadow-sm' => request()->routeIs('profile.*'),
+                            'text-white/75 hover:bg-white/10 hover:text-white' => ! request()->routeIs('profile.*'),
+                        ])
+                        :title="sidebarCollapsed ? '{{ __('Settings') }}' : null"
+                    >
+                        <x-stockpilot.icon name="settings" class="h-5 w-5 shrink-0" />
+                        <span x-show="!sidebarCollapsed" class="truncate">{{ __('Settings') }}</span>
+                    </a>
+
+                    <div class="border-t border-white/10 pt-3">
+                        <x-desktop-user-menu />
+                    </div>
+                </div>
+            </aside>
+
+            {{-- Main application area --}}
+            <div
+                class="min-h-screen transition-[padding-left] duration-200"
+                :class="sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'"
+            >
+                {{-- Header --}}
+                <header class="sticky top-0 z-30 border-b border-sp-border bg-sp-surface/95 backdrop-blur">
+                    <div class="flex h-16 items-center gap-3 px-4 sm:px-6">
+                        <button
+                            type="button"
+                            x-on:click="mobileSidebarOpen = true"
+                            class="flex h-10 w-10 items-center justify-center rounded-lg text-sp-text-muted transition hover:bg-sp-surface-muted hover:text-sp-text lg:hidden"
+                            aria-label="{{ __('Open navigation') }}"
+                        >
+                            <x-stockpilot.icon name="menu" class="h-5 w-5" />
+                        </button>
+
+                        <div class="min-w-0 flex-1">
+                            <p class="truncate text-sm font-semibold text-sp-brand-dark dark:text-white">
+                                {{ config('app.name', 'StockPilot') }}
+                            </p>
+                            <p class="hidden truncate text-xs text-sp-text-muted sm:block">
+                                {{ __('Sales, inventory & business management') }}
+                            </p>
+                        </div>
+
+                        {{-- Theme --}}
+                        <div
+                            x-data="{ open: false }"
+                            class="relative"
+                        >
+                            <button
+                                type="button"
+                                x-on:click="open = !open"
+                                x-on:keydown.escape.window="open = false"
+                                x-bind:aria-expanded="open"
+                                class="flex h-10 w-10 items-center justify-center rounded-lg text-sp-text-muted transition hover:bg-sp-surface-muted hover:text-sp-text"
+                                aria-label="{{ __('Appearance') }}"
+                            >
+                                <template x-if="$store.theme.theme === 'light'">
+                                    <x-stockpilot.icon name="sun" class="h-5 w-5" />
+                                </template>
+
+                                <template x-if="$store.theme.theme === 'dark'">
+                                    <x-stockpilot.icon name="moon" class="h-5 w-5" />
+                                </template>
+
+                                <template x-if="$store.theme.theme === 'system'">
+                                    <x-stockpilot.icon name="system" class="h-5 w-5" />
+                                </template>
+                            </button>
+
+                            <div
+                                x-cloak
+                                x-show="open"
+                                x-transition.origin.top.right
+                                x-on:click.outside="open = false"
+                                class="absolute end-0 top-full z-50 mt-2 w-44 overflow-hidden rounded-xl border border-sp-border bg-sp-surface p-1.5 shadow-xl"
+                            >
+                                <button
+                                    type="button"
+                                    x-on:click="$store.theme.set('light'); open = false"
+                                    class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sp-text transition hover:bg-sp-surface-muted"
+                                >
+                                    <x-stockpilot.icon name="sun" class="h-4 w-4" />
+                                    {{ __('Light') }}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    x-on:click="$store.theme.set('dark'); open = false"
+                                    class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sp-text transition hover:bg-sp-surface-muted"
+                                >
+                                    <x-stockpilot.icon name="moon" class="h-4 w-4" />
+                                    {{ __('Dark') }}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    x-on:click="$store.theme.set('system'); open = false"
+                                    class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sp-text transition hover:bg-sp-surface-muted"
+                                >
+                                    <x-stockpilot.icon name="system" class="h-4 w-4" />
+                                    {{ __('System') }}
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- Notifications placeholder --}}
+                        <button
+                            type="button"
+                            class="hidden h-10 w-10 items-center justify-center rounded-lg text-sp-text-muted transition hover:bg-sp-surface-muted hover:text-sp-text sm:flex"
+                            aria-label="{{ __('Notifications') }}"
+                            title="{{ __('Notifications') }}"
+                        >
+                            <x-stockpilot.icon name="bell" class="h-5 w-5" />
+                        </button>
+
+                        <div class="hidden items-center gap-3 border-s border-sp-border ps-3 sm:flex">
+                            <span class="text-xs text-sp-text-muted">
+                                {{ auth()->user()->name }}
+                            </span>
+                        </div>
+                    </div>
+                </header>
+
+                {{-- Content --}}
+                <main class="min-w-0">
+                    {{ $slot }}
+                </main>
+            </div>
+        </div>
     </body>
 </html>

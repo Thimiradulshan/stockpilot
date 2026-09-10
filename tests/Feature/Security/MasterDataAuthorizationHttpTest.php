@@ -61,7 +61,7 @@ class MasterDataAuthorizationHttpTest extends TestCase
         $this->actingAs($user)
             ->get(route('admin.products.index'))
             ->assertOk()
-            ->assertSee('product-management');
+            ->assertSee('Product catalog');
     }
 
     public function test_sales_user_cannot_access_products(): void
