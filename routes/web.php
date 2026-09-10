@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\UserController;
+use App\Livewire\Admin\Products\Index as ProductsIndex;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -25,7 +26,7 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('role:admin,stock')
         ->name('admin.suppliers.index');
 
-    Route::get('admin/products', [ProductController::class, 'index'])
+    Route::get('admin/products', ProductsIndex::class)
         ->middleware('role:admin,stock')
         ->name('admin.products.index');
 
