@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
@@ -47,6 +48,26 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('role:admin,sales')
         ->name('admin.customers.index');
 
+    Route::get('admin/purchases', [PurchaseController::class, 'index'])
+        ->middleware('role:admin,stock')
+        ->name('admin.purchases.index');
+
+    Route::post('admin/purchases', [PurchaseController::class, 'store'])
+        ->middleware('role:admin,stock')
+        ->name('admin.purchases.store');
+
+    Route::post('admin/purchases/{purchase}/cancel', [
+        PurchaseController::class,
+        'cancel',
+    ])
+        ->middleware('role:admin,stock')
+        ->name('admin.purchases.cancel');
+
+    /*
+     * Temporary security verification routes.
+     * These remain until the broader authorization test suite is
+     * consolidated and then should be removed.
+     */
     Route::get('security-test/admin', fn () => 'admin-area')
         ->middleware('role:admin')
         ->name('security.test.admin');

@@ -12,6 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('categories', function (Blueprint $table): void {
+            $table->engine = 'InnoDB';
+
             $table->id();
 
             $table->string('name', 100);
@@ -25,6 +27,8 @@ return new class extends Migration
         });
 
         Schema::create('suppliers', function (Blueprint $table): void {
+            $table->engine = 'InnoDB';
+
             $table->id();
 
             $table->string('name', 150);
@@ -41,6 +45,8 @@ return new class extends Migration
         });
 
         Schema::create('products', function (Blueprint $table): void {
+            $table->engine = 'InnoDB';
+
             $table->id();
 
             $table->foreignId('category_id')
@@ -66,6 +72,8 @@ return new class extends Migration
         });
 
         Schema::create('product_supplier', function (Blueprint $table): void {
+            $table->engine = 'InnoDB';
+
             $table->foreignId('product_id')
                 ->constrained('products')
                 ->cascadeOnDelete()
@@ -87,6 +95,8 @@ return new class extends Migration
         });
 
         Schema::create('customers', function (Blueprint $table): void {
+            $table->engine = 'InnoDB';
+
             $table->id();
 
             $table->string('name', 150);

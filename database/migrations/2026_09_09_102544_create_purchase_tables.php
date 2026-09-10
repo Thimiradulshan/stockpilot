@@ -12,6 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('purchases', function (Blueprint $table): void {
+            $table->engine = 'InnoDB';
+
             $table->id();
 
             $table->string('purchase_number', 50)->unique();
@@ -44,6 +46,8 @@ return new class extends Migration
         });
 
         Schema::create('purchase_items', function (Blueprint $table): void {
+            $table->engine = 'InnoDB';
+
             $table->id();
 
             $table->foreignId('purchase_id')

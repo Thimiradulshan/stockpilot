@@ -11,13 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cache', function (Blueprint $table) {
+        Schema::create('cache', function (Blueprint $table): void {
+            $table->engine = 'InnoDB';
+
             $table->string('key')->primary();
             $table->mediumText('value');
             $table->bigInteger('expiration')->index();
         });
 
-        Schema::create('cache_locks', function (Blueprint $table) {
+        Schema::create('cache_locks', function (Blueprint $table): void {
+            $table->engine = 'InnoDB';
+
             $table->string('key')->primary();
             $table->string('owner');
             $table->bigInteger('expiration')->index();

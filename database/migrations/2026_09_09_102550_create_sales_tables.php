@@ -12,6 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('invoices', function (Blueprint $table): void {
+            $table->engine = 'InnoDB';
+
             $table->id();
 
             $table->string('invoice_number', 50)->unique();
@@ -48,6 +50,8 @@ return new class extends Migration
         });
 
         Schema::create('invoice_items', function (Blueprint $table): void {
+            $table->engine = 'InnoDB';
+
             $table->id();
 
             $table->foreignId('invoice_id')
@@ -74,6 +78,8 @@ return new class extends Migration
         });
 
         Schema::create('payments', function (Blueprint $table): void {
+            $table->engine = 'InnoDB';
+
             $table->id();
 
             $table->foreignId('invoice_id')
