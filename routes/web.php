@@ -6,7 +6,9 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\UserController;
+use App\Livewire\Admin\Categories\Index as CategoriesIndex;
 use App\Livewire\Admin\Products\Index as ProductsIndex;
+use App\Livewire\Admin\Suppliers\Index as SuppliersIndex;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -18,13 +20,29 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('role:admin')
         ->name('admin.users.index');
 
-    Route::get('admin/categories', [CategoryController::class, 'index'])
+    Route::get('admin/categories', CategoriesIndex::class)
         ->middleware('role:admin,stock')
         ->name('admin.categories.index');
 
-    Route::get('admin/suppliers', [SupplierController::class, 'index'])
+    Route::post('admin/categories', [CategoryController::class, 'store'])
+        ->middleware('role:admin,stock')
+        ->name('admin.categories.store');
+
+    Route::patch('admin/categories/{category}', [CategoryController::class, 'update'])
+        ->middleware('role:admin,stock')
+        ->name('admin.categories.update');
+
+    Route::get('admin/suppliers', SuppliersIndex::class)
         ->middleware('role:admin,stock')
         ->name('admin.suppliers.index');
+
+    Route::post('admin/suppliers', [SupplierController::class, 'store'])
+        ->middleware('role:admin,stock')
+        ->name('admin.suppliers.store');
+
+    Route::patch('admin/suppliers/{supplier}', [SupplierController::class, 'update'])
+        ->middleware('role:admin,stock')
+        ->name('admin.suppliers.update');
 
     Route::get('admin/products', ProductsIndex::class)
         ->middleware('role:admin,stock')

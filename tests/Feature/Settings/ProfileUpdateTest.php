@@ -4,6 +4,8 @@ namespace Tests\Feature\Settings;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -18,6 +20,7 @@ class ProfileUpdateTest extends TestCase
         $this->actingAs($user)
             ->get(route('profile.edit'))
             ->assertOk()
+            ->assertSee('My Profile')
             ->assertDontSee('Delete account')
             ->assertDontSee('delete-user');
     }
@@ -39,6 +42,7 @@ class ProfileUpdateTest extends TestCase
         $this->assertSame('Updated User', $user->name);
         $this->assertSame('updated@example.com', $user->email);
         $this->assertNull($user->email_verified_at);
+        $this->assertNull($user->profile_photo_path);
     }
 
     public function test_email_verification_status_is_unchanged_when_email_address_is_unchanged(): void
@@ -62,6 +66,84 @@ class ProfileUpdateTest extends TestCase
         $this->assertSame(
             $verifiedAt->toDateTimeString(),
             $user->email_verified_at?->toDateTimeString()
+        );
+    }
+
+    public function test_profile_photo_can_be_uploaded(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user);
+
+        $photo = UploadedFile::fake()->image('profile.jpg', 300, 300);
+
+        Livewire::test('pages::settings.profile')
+            ->set('photo', $photo)
+            ->call('updateProfileInformation')
+            ->assertHasNoErrors();
+
+        $user->refresh();
+
+        $this->assertNotNull($user->profile_photo_path);
+        $this->assertStringStartsWith(
+            'profile-photos/',
+            $user->profile_photo_path
+        );
+
+        Storage::disk('public')->assertExists($user->profile_photo_path);
+    }
+
+    public function test_invalid_profile_photo_is_rejected(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user);
+
+        $photo = UploadedFile::fake()->create(
+            'profile.txt',
+            100,
+            'text/plain'
+        );
+
+        Livewire::test('pages::settings.profile')
+            ->set('photo', $photo)
+            ->call('updateProfileInformation')
+            ->assertHasErrors(['photo']);
+
+        $user->refresh();
+
+        $this->assertNull($user->profile_photo_path);
+    }
+
+    public function test_profile_photo_can_be_removed(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create([
+            'profile_photo_path' => 'profile-photos/existing.jpg',
+        ]);
+
+        Storage::disk('public')->put(
+            'profile-photos/existing.jpg',
+            'fake-image-content'
+        );
+
+        $this->actingAs($user);
+
+        Livewire::test('pages::settings.profile')
+            ->call('removeProfilePhoto')
+            ->assertHasNoErrors();
+
+        $user->refresh();
+
+        $this->assertNull($user->profile_photo_path);
+
+        Storage::disk('public')->assertMissing(
+            'profile-photos/existing.jpg'
         );
     }
 

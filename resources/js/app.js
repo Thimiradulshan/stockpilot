@@ -1,44 +1,73 @@
+/*
+|--------------------------------------------------------------------------
+| StockPilot Application JavaScript
+|--------------------------------------------------------------------------
+|
+| Livewire provides Alpine.js.
+| The application registers its global Alpine stores here.
+|
+*/
+
 document.addEventListener('alpine:init', () => {
     Alpine.store('theme', {
         theme: localStorage.getItem('stockpilot-theme') || 'system',
 
-        init() {
-            this.apply();
+        systemDark: window.matchMedia(
+            '(prefers-color-scheme: dark)'
+        ).matches,
 
-            window
-                .matchMedia('(prefers-color-scheme: dark)')
-                .addEventListener('change', () => {
-                    if (this.theme === 'system') {
-                        this.apply();
-                    }
-                });
+        init() {
+            const mediaQuery = window.matchMedia(
+                '(prefers-color-scheme: dark)'
+            );
+
+            this.systemDark = mediaQuery.matches;
+
+            mediaQuery.addEventListener('change', (event) => {
+                this.systemDark = event.matches;
+
+                if (this.theme === 'system') {
+                    this.apply();
+                }
+            });
+
+            this.apply();
         },
 
-        set(theme) {
-            if (!['light', 'dark', 'system'].includes(theme)) {
+        get dark() {
+            return this.theme === 'dark'
+                || (
+                    this.theme === 'system'
+                    && this.systemDark
+                );
+        },
+
+        set(value) {
+            const allowedValues = [
+                'light',
+                'dark',
+                'system',
+            ];
+
+            if (!allowedValues.includes(value)) {
                 return;
             }
 
-            this.theme = theme;
-            localStorage.setItem('stockpilot-theme', theme);
+            this.theme = value;
+
+            localStorage.setItem(
+                'stockpilot-theme',
+                value
+            );
+
             this.apply();
         },
 
         apply() {
-            const isDark =
-                this.theme === 'dark' ||
-                (
-                    this.theme === 'system' &&
-                    window.matchMedia('(prefers-color-scheme: dark)').matches
-                );
-
-            document.documentElement.classList.toggle('dark', isDark);
-        },
-
-        isDark() {
-            return document.documentElement.classList.contains('dark');
+            document.documentElement.classList.toggle(
+                'dark',
+                this.dark
+            );
         },
     });
-
-    Alpine.store('theme').init();
 });

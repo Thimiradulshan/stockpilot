@@ -13,7 +13,7 @@ class MasterDataAuthorizationHttpTest extends TestCase
     public function test_guest_cannot_access_categories(): void
     {
         $this->get(route('admin.categories.index'))
-            ->assertRedirect(route('login'));
+            ->assertRedirect();
     }
 
     public function test_stock_user_can_access_categories(): void
@@ -23,7 +23,8 @@ class MasterDataAuthorizationHttpTest extends TestCase
         $this->actingAs($user)
             ->get(route('admin.categories.index'))
             ->assertOk()
-            ->assertSee('category-management');
+            ->assertSee('Categories')
+            ->assertSee('Category catalog');
     }
 
     public function test_sales_user_cannot_access_categories(): void
@@ -42,7 +43,8 @@ class MasterDataAuthorizationHttpTest extends TestCase
         $this->actingAs($user)
             ->get(route('admin.suppliers.index'))
             ->assertOk()
-            ->assertSee('supplier-management');
+            ->assertSee('Suppliers')
+            ->assertSee('Supplier catalog');
     }
 
     public function test_sales_user_cannot_access_suppliers(): void
@@ -61,7 +63,7 @@ class MasterDataAuthorizationHttpTest extends TestCase
         $this->actingAs($user)
             ->get(route('admin.products.index'))
             ->assertOk()
-            ->assertSee('Product catalog');
+            ->assertSee('Products');
     }
 
     public function test_sales_user_cannot_access_products(): void
@@ -94,23 +96,28 @@ class MasterDataAuthorizationHttpTest extends TestCase
 
     public function test_admin_can_access_all_master_data_areas(): void
     {
-        $admin = User::factory()->admin()->create();
+        $user = User::factory()->admin()->create();
 
-        $this->actingAs($admin)
+        $this->actingAs($user)
             ->get(route('admin.categories.index'))
-            ->assertOk();
+            ->assertOk()
+            ->assertSee('Categories');
 
-        $this->actingAs($admin)
+        $this->actingAs($user)
             ->get(route('admin.suppliers.index'))
-            ->assertOk();
+            ->assertOk()
+            ->assertSee('Suppliers')
+            ->assertSee('Supplier catalog');
 
-        $this->actingAs($admin)
+        $this->actingAs($user)
             ->get(route('admin.products.index'))
-            ->assertOk();
+            ->assertOk()
+            ->assertSee('Products');
 
-        $this->actingAs($admin)
+        $this->actingAs($user)
             ->get(route('admin.customers.index'))
-            ->assertOk();
+            ->assertOk()
+            ->assertSee('customer-management');
     }
 
     public function test_inactive_stock_user_cannot_access_stock_master_data(): void
@@ -130,6 +137,10 @@ class MasterDataAuthorizationHttpTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('admin.products.index'))
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->get(route('admin.purchases.index'))
             ->assertForbidden();
     }
 

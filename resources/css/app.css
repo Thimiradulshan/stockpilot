@@ -10,12 +10,24 @@
 
     /*
     |--------------------------------------------------------------------------
-    | StockPilot semantic color tokens
+    | StockPilot semantic color system
     |--------------------------------------------------------------------------
     |
-    | Components should use semantic colors rather than hard-coded values.
-    | Light/dark themes change the underlying tokens while keeping component
-    | classes stable.
+    | Core light palette
+    |
+    | #CAF0F8  Application background
+    | #166088  Brand / sidebar
+    | #118AB2  Primary actions
+    | #5FA8D3  Secondary blue
+    | #62B6CB  Supporting blue
+    | #BEE9E8  Soft cyan
+    | #CAE9FF  Soft information blue
+    | #E3F2FD  Very light blue surfaces
+    | #06D6A0  Success
+    | #FFD166  Attention
+    | #EF476F  Danger
+    | #80FFDB  Rare accent
+    | #4F6D7A  Neutral
     |
     */
 
@@ -50,99 +62,150 @@
 
     --color-sp-info: var(--sp-info);
     --color-sp-info-foreground: var(--sp-info-foreground);
-}
 
-/*
-|--------------------------------------------------------------------------
-| StockPilot light theme
-|--------------------------------------------------------------------------
-*/
+    --color-sp-accent: var(--sp-accent);
+    --color-sp-accent-foreground: var(--sp-accent-foreground);
+}
 
 @layer theme {
     :root {
         color-scheme: light;
 
-        --sp-background: #F6F9F8;
+        /*
+        |--------------------------------------------------------------------------
+        | Surfaces
+        |--------------------------------------------------------------------------
+        */
+
+        --sp-background: #CAF0F8;
         --sp-surface: #FFFFFF;
-        --sp-surface-muted: #E7ECEA;
+        --sp-surface-muted: #E3F2FD;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Brand
+        |--------------------------------------------------------------------------
+        */
 
         --sp-primary: #118AB2;
         --sp-primary-foreground: #FFFFFF;
 
-        --sp-secondary: #6B9AC4;
-        --sp-secondary-foreground: #FFFFFF;
+        --sp-secondary: #5FA8D3;
+        --sp-secondary-foreground: #123449;
 
         --sp-brand-dark: #166088;
         --sp-brand-foreground: #FFFFFF;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Typography
+        |--------------------------------------------------------------------------
+        */
 
         --sp-text: #24343D;
         --sp-text-muted: #4F6D7A;
         --sp-text-subtle: #6B7C84;
 
-        --sp-border: #D7DFDC;
-        --sp-border-strong: #B9C6C1;
+        /*
+        |--------------------------------------------------------------------------
+        | Borders
+        |--------------------------------------------------------------------------
+        */
 
-        --sp-success: #198754;
-        --sp-success-foreground: #FFFFFF;
+        --sp-border: #BEE9E8;
+        --sp-border-strong: #62B6CB;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Semantic states
+        |--------------------------------------------------------------------------
+        */
+
+        --sp-success: #06D6A0;
+        --sp-success-foreground: #064E3B;
 
         --sp-warning: #FFD166;
-        --sp-warning-foreground: #24343D;
+        --sp-warning-foreground: #594200;
 
-        --sp-danger: #C1121F;
+        --sp-danger: #EF476F;
         --sp-danger-foreground: #FFFFFF;
 
-        --sp-info: #118AB2;
-        --sp-info-foreground: #FFFFFF;
-    }
+        --sp-info: #62B6CB;
+        --sp-info-foreground: #123B4A;
 
-    /*
-    |--------------------------------------------------------------------------
-    | StockPilot dark theme
-    |--------------------------------------------------------------------------
-    */
+        --sp-accent: #80FFDB;
+        --sp-accent-foreground: #123B4A;
+    }
 
     .dark {
         color-scheme: dark;
 
-        --sp-background: #101B21;
-        --sp-surface: #16252D;
-        --sp-surface-muted: #1E3038;
+        /*
+        |--------------------------------------------------------------------------
+        | Dark surfaces
+        |--------------------------------------------------------------------------
+        */
 
-        --sp-primary: #25A7CF;
-        --sp-primary-foreground: #FFFFFF;
+        --sp-background: #0F2730;
+        --sp-surface: #153640;
+        --sp-surface-muted: #1C4653;
 
-        --sp-secondary: #86B3D5;
-        --sp-secondary-foreground: #10202A;
+        /*
+        |--------------------------------------------------------------------------
+        | Brand
+        |--------------------------------------------------------------------------
+        */
+
+        --sp-primary: #62B6CB;
+        --sp-primary-foreground: #08232C;
+
+        --sp-secondary: #5FA8D3;
+        --sp-secondary-foreground: #0E202A;
 
         --sp-brand-dark: #166088;
         --sp-brand-foreground: #FFFFFF;
 
-        --sp-text: #EEF4F5;
-        --sp-text-muted: #B6C7CC;
-        --sp-text-subtle: #8EA3AA;
+        /*
+        |--------------------------------------------------------------------------
+        | Typography
+        |--------------------------------------------------------------------------
+        */
 
-        --sp-border: #2D424A;
-        --sp-border-strong: #3E5962;
+        --sp-text: #F0FAFC;
+        --sp-text-muted: #B9D0D7;
+        --sp-text-subtle: #8FAAB3;
 
-        --sp-success: #2BA36A;
-        --sp-success-foreground: #FFFFFF;
+        /*
+        |--------------------------------------------------------------------------
+        | Borders
+        |--------------------------------------------------------------------------
+        */
+
+        --sp-border: #2A5662;
+        --sp-border-strong: #3D7180;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Semantic states
+        |--------------------------------------------------------------------------
+        */
+
+        --sp-success: #06D6A0;
+        --sp-success-foreground: #052E24;
 
         --sp-warning: #FFD166;
-        --sp-warning-foreground: #1D2930;
+        --sp-warning-foreground: #3F3000;
 
-        --sp-danger: #E0424C;
+        --sp-danger: #EF476F;
         --sp-danger-foreground: #FFFFFF;
 
-        --sp-info: #25A7CF;
-        --sp-info-foreground: #FFFFFF;
+        --sp-info: #62B6CB;
+        --sp-info-foreground: #082630;
+
+        --sp-accent: #80FFDB;
+        --sp-accent-foreground: #082630;
     }
 }
-
-/*
-|--------------------------------------------------------------------------
-| Base application styling
-|--------------------------------------------------------------------------
-*/
 
 @layer base {
     html {
@@ -185,19 +248,30 @@
         outline: 2px solid var(--sp-primary);
         outline-offset: 2px;
     }
+
+    input,
+    select,
+    textarea {
+        color: var(--sp-text);
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+        color: var(--sp-text-subtle);
+    }
+
+    option {
+        background: var(--sp-surface);
+        color: var(--sp-text);
+    }
 }
+
 [x-cloak] {
     display: none !important;
 }
 
-/*
-|--------------------------------------------------------------------------
-| StockPilot reusable semantic helpers
-|--------------------------------------------------------------------------
-*/
-
 @utility sp-page {
-    @apply mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8;
+    @apply mx-auto w-full max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8;
 }
 
 @utility sp-surface {
