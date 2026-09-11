@@ -82,7 +82,8 @@ class MasterDataAuthorizationHttpTest extends TestCase
         $this->actingAs($user)
             ->get(route('admin.customers.index'))
             ->assertOk()
-            ->assertSee('customer-management');
+            ->assertSee('Customers')
+            ->assertSee('Manage customer records used by StockPilot sales and invoices.');
     }
 
     public function test_stock_user_cannot_access_customers(): void
@@ -117,7 +118,8 @@ class MasterDataAuthorizationHttpTest extends TestCase
         $this->actingAs($user)
             ->get(route('admin.customers.index'))
             ->assertOk()
-            ->assertSee('customer-management');
+            ->assertSee('Customers')
+            ->assertSee('Manage customer records used by StockPilot sales and invoices.');
     }
 
     public function test_inactive_stock_user_cannot_access_stock_master_data(): void

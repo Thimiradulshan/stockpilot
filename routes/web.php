@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\UserController;
 use App\Livewire\Admin\Categories\Index as CategoriesIndex;
+use App\Livewire\Admin\Customers\Index as CustomersIndex;
 use App\Livewire\Admin\Products\Index as ProductsIndex;
 use App\Livewire\Admin\Suppliers\Index as SuppliersIndex;
 use Illuminate\Support\Facades\Route;
@@ -16,9 +17,21 @@ Route::view('/', 'welcome')->name('home');
 Route::middleware(['auth'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
 
+    /*
+    |--------------------------------------------------------------------------
+    | User Management
+    |--------------------------------------------------------------------------
+    */
+
     Route::get('admin/users', [UserController::class, 'index'])
         ->middleware('role:admin')
         ->name('admin.users.index');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Categories
+    |--------------------------------------------------------------------------
+    */
 
     Route::get('admin/categories', CategoriesIndex::class)
         ->middleware('role:admin,stock')
@@ -32,6 +45,12 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('role:admin,stock')
         ->name('admin.categories.update');
 
+    /*
+    |--------------------------------------------------------------------------
+    | Suppliers
+    |--------------------------------------------------------------------------
+    */
+
     Route::get('admin/suppliers', SuppliersIndex::class)
         ->middleware('role:admin,stock')
         ->name('admin.suppliers.index');
@@ -43,6 +62,12 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('admin/suppliers/{supplier}', [SupplierController::class, 'update'])
         ->middleware('role:admin,stock')
         ->name('admin.suppliers.update');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Products
+    |--------------------------------------------------------------------------
+    */
 
     Route::get('admin/products', ProductsIndex::class)
         ->middleware('role:admin,stock')
@@ -63,9 +88,29 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('role:admin,stock')
         ->name('admin.products.stock.adjust');
 
-    Route::get('admin/customers', [CustomerController::class, 'index'])
+    /*
+    |--------------------------------------------------------------------------
+    | Customers
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('admin/customers', CustomersIndex::class)
         ->middleware('role:admin,sales')
         ->name('admin.customers.index');
+
+    Route::post('admin/customers', [CustomerController::class, 'store'])
+        ->middleware('role:admin,sales')
+        ->name('admin.customers.store');
+
+    Route::patch('admin/customers/{customer}', [CustomerController::class, 'update'])
+        ->middleware('role:admin,sales')
+        ->name('admin.customers.update');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Purchases
+    |--------------------------------------------------------------------------
+    */
 
     Route::get('admin/purchases', [PurchaseController::class, 'index'])
         ->middleware('role:admin,stock')
@@ -83,10 +128,16 @@ Route::middleware(['auth'])->group(function () {
         ->name('admin.purchases.cancel');
 
     /*
-     * Temporary security verification routes.
-     * These remain until the broader authorization test suite is
-     * consolidated and then should be removed.
-     */
+    |--------------------------------------------------------------------------
+    | Temporary Security Verification Routes
+    |--------------------------------------------------------------------------
+    |
+    | These routes are temporary and should be removed before final
+    | production submission after the broader authorization test suite
+    | has been consolidated.
+    |
+    */
+
     Route::get('security-test/admin', fn () => 'admin-area')
         ->middleware('role:admin')
         ->name('security.test.admin');
@@ -100,4 +151,4 @@ Route::middleware(['auth'])->group(function () {
         ->name('security.test.stock');
 });
 
-require __DIR__.'/settings.php';
+require __DIR__ . '/settings.php';
