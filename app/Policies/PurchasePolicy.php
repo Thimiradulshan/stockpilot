@@ -36,11 +36,14 @@ class PurchasePolicy
 
     /**
      * Determine whether the user can cancel a purchase.
+     *
+     * Cancellation is only a valid transition from completed -> cancelled.
      */
     public function cancel(User $user, Purchase $purchase): bool
     {
         return $user->isActive()
-            && ($user->isAdmin() || $user->isStockUser());
+            && ($user->isAdmin() || $user->isStockUser())
+            && $purchase->status === 'completed';
     }
 
     /**

@@ -37,6 +37,7 @@ class PurchaseService
         string|int $discountAmount,
         string|int $taxAmount,
         User $actor,
+        ?string $notes = null,
     ): Purchase {
         $purchaseNumber = $this->normalizePurchaseNumber(
             $purchaseNumber
@@ -56,6 +57,8 @@ class PurchaseService
             'Purchase tax amount'
         );
 
+        $normalizedNotes = $this->normalizeNotes($notes);
+
         $normalizedItems = $this->normalizeItems($items);
 
         if (! $actor->isActive()) {
@@ -71,6 +74,7 @@ class PurchaseService
             $normalizedItems,
             $headerDiscount,
             $headerTax,
+            $normalizedNotes,
             $actor,
         ): Purchase {
             $lockedSupplier = Supplier::query()
@@ -158,7 +162,7 @@ class PurchaseService
                 'tax_amount' => (string) $headerTax->toScale(2),
                 'total_amount' => (string) $totalAmount->toScale(2),
                 'status' => 'completed',
-                'notes' => null,
+                'notes' => $normalizedNotes,
                 'created_by' => $actor->getKey(),
             ]);
 
@@ -608,7 +612,21 @@ class PurchaseService
     }
 
     /**
-     * Parse an existing stock quantity.
+     * Normalize optional purchase notes.
+     */
+    private function normalizeNotes(?string $notes): ?string
+    {
+        if ($notes === null) {
+            return null;
+        }
+
+        $value = trim($notes);
+
+        return $value === '' ? null : $value;
+    }
+
+    /**
+     * Normalize an existing stock quantity.
      *
      * @throws MathException
      */

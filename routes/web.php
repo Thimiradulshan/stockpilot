@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Livewire\Admin\Categories\Index as CategoriesIndex;
 use App\Livewire\Admin\Customers\Index as CustomersIndex;
 use App\Livewire\Admin\Products\Index as ProductsIndex;
+use App\Livewire\Admin\Purchases\Index as PurchasesIndex;
 use App\Livewire\Admin\Suppliers\Index as SuppliersIndex;
 use Illuminate\Support\Facades\Route;
 
@@ -112,7 +113,7 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::get('admin/purchases', [PurchaseController::class, 'index'])
+    Route::get('admin/purchases', PurchasesIndex::class)
         ->middleware('role:admin,stock')
         ->name('admin.purchases.index');
 
@@ -132,9 +133,8 @@ Route::middleware(['auth'])->group(function () {
     | Temporary Security Verification Routes
     |--------------------------------------------------------------------------
     |
-    | These routes are temporary and should be removed before final
-    | production submission after the broader authorization test suite
-    | has been consolidated.
+    | Remove these before final production submission after the
+    | authorization suite has been consolidated.
     |
     */
 
@@ -151,4 +151,4 @@ Route::middleware(['auth'])->group(function () {
         ->name('security.test.stock');
 });
 
-require __DIR__ . '/settings.php';
+require __DIR__.'/settings.php';

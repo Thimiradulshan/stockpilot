@@ -8,20 +8,9 @@ use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Services\PurchaseService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Response;
 
 class PurchaseController extends Controller
 {
-    /**
-     * Display the purchase management area.
-     */
-    public function index(): Response
-    {
-        $this->authorize('viewAny', Purchase::class);
-
-        return response('purchase-management');
-    }
-
     /**
      * Store a completed purchase.
      */
@@ -45,9 +34,11 @@ class PurchaseController extends Controller
             discountAmount: $data['discount_amount'],
             taxAmount: $data['tax_amount'],
             actor: $request->user(),
+            notes: $data['notes'] ?? null,
         );
 
-        return to_route('admin.purchases.index');
+        return to_route('admin.purchases.index')
+            ->with('success', 'Purchase created successfully.');
     }
 
     /**
@@ -64,6 +55,7 @@ class PurchaseController extends Controller
             actor: request()->user(),
         );
 
-        return to_route('admin.purchases.index');
+        return to_route('admin.purchases.index')
+            ->with('success', 'Purchase cancelled successfully.');
     }
 }
