@@ -12,13 +12,20 @@
     (() => {
         const stored = localStorage.getItem('stockpilot-theme');
 
-        const isDark =
-            stored === 'dark' ||
+        const dark =
+            stored === 'dark'
+            ||
             (
-                stored !== 'light' &&
-                window.matchMedia('(prefers-color-scheme: dark)').matches
+                stored !== 'light'
+                &&
+                window.matchMedia(
+                    '(prefers-color-scheme: dark)'
+                ).matches
             );
 
-        document.documentElement.classList.toggle('dark', isDark);
+        document.documentElement.classList.toggle(
+            'dark',
+            dark
+        );
     })();
 </script>

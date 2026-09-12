@@ -1,8 +1,29 @@
-<div class="sp-page">
+<div
+    class="sp-page"
+    x-data="{
+        createProductOpen: @js($errors->any()),
+
+        init() {
+            this.$watch('createProductOpen', (open) => {
+                if (open) {
+                    this.$nextTick(() => {
+                        document.getElementById('create_product_name')?.focus();
+                    });
+                }
+            });
+        },
+
+        openCreateProduct() {
+            this.createProductOpen = true;
+        },
+
+        closeCreateProduct() {
+            this.createProductOpen = false;
+        },
+    }"
+    x-on:keydown.escape.window="closeCreateProduct()"
+>
     <div class="relative space-y-6">
-        {{-- =========================================================
-            SOFT AMBIENT BACKGROUND
-        ========================================================== --}}
         <div
             class="pointer-events-none absolute -top-10 start-1/3 h-72 w-72 rounded-full bg-sp-info/[0.07] blur-3xl"
             aria-hidden="true"
@@ -13,9 +34,6 @@
             aria-hidden="true"
         ></div>
 
-        {{-- =========================================================
-            PAGE HEADER
-        ========================================================== --}}
         <section class="relative overflow-hidden rounded-2xl border border-sp-border bg-sp-surface shadow-sm">
             <div class="absolute inset-y-0 start-0 w-1 bg-sp-primary"></div>
 
@@ -45,11 +63,11 @@
                         </p>
                     </div>
 
-                    <div class="shrink-0">
-                        @if (Route::has('admin.products.create'))
-                            <a
-                                href="{{ route('admin.products.create') }}"
-                                wire:navigate
+                    @can('create', \App\Models\Product::class)
+                        <div class="shrink-0">
+                            <button
+                                type="button"
+                                x-on:click="openCreateProduct()"
                                 class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-sp-primary px-4 py-2.5 text-sm font-semibold text-sp-primary-foreground shadow-sm transition duration-150 hover:-translate-y-0.5 hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-sp-primary/30 sm:w-auto"
                             >
                                 <svg
@@ -68,15 +86,12 @@
                                 </svg>
 
                                 {{ __('Add product') }}
-                            </a>
-                        @endif
-                    </div>
+                            </button>
+                        </div>
+                    @endcan
                 </div>
             </div>
 
-            {{-- =====================================================
-                INTERNAL TABS
-            ====================================================== --}}
             <div class="border-t border-sp-border bg-sp-surface px-4 sm:px-6">
                 <div class="flex items-center gap-1 overflow-x-auto">
                     <a
@@ -127,13 +142,8 @@
             </div>
         </section>
 
-        {{-- =========================================================
-            KPI CARDS
-        ========================================================== --}}
         <section aria-label="{{ __('Product summary') }}">
             <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
-                {{-- Total --}}
                 <article class="relative overflow-hidden rounded-xl border border-sp-border bg-sp-surface p-5 shadow-sm">
                     <div class="absolute inset-x-0 top-0 h-1 bg-sp-brand-dark"></div>
 
@@ -161,7 +171,6 @@
                     </div>
                 </article>
 
-                {{-- Active --}}
                 <article class="relative overflow-hidden rounded-xl border border-sp-border bg-sp-surface p-5 shadow-sm">
                     <div class="absolute inset-x-0 top-0 h-1 bg-sp-success"></div>
 
@@ -198,7 +207,6 @@
                     </div>
                 </article>
 
-                {{-- Low stock --}}
                 <article class="relative overflow-hidden rounded-xl border border-sp-border bg-sp-surface p-5 shadow-sm">
                     <div class="absolute inset-x-0 top-0 h-1 bg-sp-warning"></div>
 
@@ -237,7 +245,6 @@
                     </div>
                 </article>
 
-                {{-- Out of stock --}}
                 <article class="relative overflow-hidden rounded-xl border border-sp-border bg-sp-surface p-5 shadow-sm">
                     <div class="absolute inset-x-0 top-0 h-1 bg-sp-danger"></div>
 
@@ -278,12 +285,7 @@
             </div>
         </section>
 
-        {{-- =========================================================
-            PRODUCT CATALOG
-        ========================================================== --}}
         <section class="overflow-hidden rounded-2xl border border-sp-border bg-sp-surface shadow-sm">
-
-            {{-- Catalog header --}}
             <div class="border-b border-sp-border bg-sp-info/[0.035] px-5 py-5 sm:px-6">
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div class="flex min-w-0 items-start gap-3">
@@ -337,11 +339,8 @@
                     </div>
                 </div>
 
-                {{-- Filter container --}}
                 <div class="mt-5 rounded-xl border border-sp-info/20 bg-sp-surface p-4 shadow-sm">
                     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.7fr)_minmax(190px,0.8fr)_minmax(170px,0.7fr)_auto]">
-
-                        {{-- Search --}}
                         <div>
                             <label
                                 for="product-search"
@@ -379,7 +378,6 @@
                             </div>
                         </div>
 
-                        {{-- Category --}}
                         <div>
                             <label
                                 for="product-category"
@@ -405,7 +403,6 @@
                             </select>
                         </div>
 
-                        {{-- Status --}}
                         <div>
                             <label
                                 for="product-status"
@@ -433,7 +430,6 @@
                             </select>
                         </div>
 
-                        {{-- Clear --}}
                         <div class="flex items-end">
                             @if ($this->hasActiveFilters())
                                 <button
@@ -464,9 +460,6 @@
                 </div>
             </div>
 
-            {{-- =====================================================
-                DESKTOP TABLE
-            ====================================================== --}}
             <div class="hidden overflow-x-auto md:block">
                 <table class="min-w-full">
                     <thead>
@@ -632,8 +625,37 @@
                                             @endif
                                         </p>
 
-                                        <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
-                                            @if ($this->hasActiveFilters())
+                                        @can('create', \App\Models\Product::class)
+                                            @if (!$this->hasActiveFilters())
+                                                <div class="mt-4">
+                                                    <button
+                                                        type="button"
+                                                        x-on:click="openCreateProduct()"
+                                                        class="inline-flex items-center gap-2 rounded-lg bg-sp-primary px-4 py-2.5 text-sm font-semibold text-sp-primary-foreground shadow-sm transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-sp-primary/30"
+                                                    >
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            stroke-width="2"
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                            class="h-4 w-4"
+                                                            aria-hidden="true"
+                                                        >
+                                                            <path d="M12 5v14"/>
+                                                            <path d="M5 12h14"/>
+                                                        </svg>
+
+                                                        {{ __('Add product') }}
+                                                    </button>
+                                                </div>
+                                            @endif
+                                        @endcan
+
+                                        @if ($this->hasActiveFilters())
+                                            <div class="mt-4">
                                                 <button
                                                     type="button"
                                                     wire:click="clearFilters"
@@ -641,33 +663,8 @@
                                                 >
                                                     {{ __('Clear filters') }}
                                                 </button>
-                                            @endif
-
-                                            @if (!$this->hasActiveFilters() && Route::has('admin.products.create'))
-                                                <a
-                                                    href="{{ route('admin.products.create') }}"
-                                                    wire:navigate
-                                                    class="inline-flex items-center gap-2 rounded-lg bg-sp-primary px-4 py-2.5 text-sm font-semibold text-sp-primary-foreground shadow-sm transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-sp-primary/30"
-                                                >
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        viewBox="0 0 24 24"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        stroke-width="2"
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        class="h-4 w-4"
-                                                        aria-hidden="true"
-                                                    >
-                                                        <path d="M12 5v14"/>
-                                                        <path d="M5 12h14"/>
-                                                    </svg>
-
-                                                    {{ __('Add product') }}
-                                                </a>
-                                            @endif
-                                        </div>
+                                            </div>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -676,9 +673,6 @@
                 </table>
             </div>
 
-            {{-- =====================================================
-                MOBILE CARDS
-            ====================================================== --}}
             <div class="divide-y divide-sp-border md:hidden">
                 @forelse ($products as $product)
                     @php
@@ -812,8 +806,37 @@
                             @endif
                         </p>
 
-                        <div class="mt-4 flex flex-wrap justify-center gap-2">
-                            @if ($this->hasActiveFilters())
+                        @can('create', \App\Models\Product::class)
+                            @if (!$this->hasActiveFilters())
+                                <div class="mt-4">
+                                    <button
+                                        type="button"
+                                        x-on:click="openCreateProduct()"
+                                        class="inline-flex items-center gap-2 rounded-lg bg-sp-primary px-4 py-2.5 text-sm font-semibold text-sp-primary-foreground shadow-sm transition hover:brightness-95"
+                                    >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            class="h-4 w-4"
+                                            aria-hidden="true"
+                                        >
+                                            <path d="M12 5v14"/>
+                                            <path d="M5 12h14"/>
+                                        </svg>
+
+                                        {{ __('Add product') }}
+                                    </button>
+                                </div>
+                            @endif
+                        @endcan
+
+                        @if ($this->hasActiveFilters())
+                            <div class="mt-4">
                                 <button
                                     type="button"
                                     wire:click="clearFilters"
@@ -821,40 +844,12 @@
                                 >
                                     {{ __('Clear filters') }}
                                 </button>
-                            @endif
-
-                            @if (!$this->hasActiveFilters() && Route::has('admin.products.create'))
-                                <a
-                                    href="{{ route('admin.products.create') }}"
-                                    wire:navigate
-                                    class="inline-flex items-center gap-2 rounded-lg bg-sp-primary px-4 py-2.5 text-sm font-semibold text-sp-primary-foreground shadow-sm transition hover:brightness-95"
-                                >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        class="h-4 w-4"
-                                        aria-hidden="true"
-                                    >
-                                        <path d="M12 5v14"/>
-                                        <path d="M5 12h14"/>
-                                    </svg>
-
-                                    {{ __('Add product') }}
-                                </a>
-                            @endif
-                        </div>
+                            </div>
+                        @endif
                     </div>
                 @endforelse
             </div>
 
-            {{-- =====================================================
-                PAGINATION
-            ====================================================== --}}
             @if ($products->hasPages())
                 <div class="border-t border-sp-border px-5 py-4 sm:px-6">
                     {{ $products->links() }}
@@ -862,4 +857,10 @@
             @endif
         </section>
     </div>
+
+    @can('create', \App\Models\Product::class)
+        @include('livewire.admin.products.create-modal')
+    @endcan
+
+    @include('livewire.admin.products.product-manager-script')
 </div>

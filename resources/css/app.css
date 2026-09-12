@@ -6,43 +6,24 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-
-    /*
-    |--------------------------------------------------------------------------
-    | StockPilot semantic color system
-    |--------------------------------------------------------------------------
-    |
-    | Core light palette
-    |
-    | #CAF0F8  Application background
-    | #166088  Brand / sidebar
-    | #118AB2  Primary actions
-    | #5FA8D3  Secondary blue
-    | #62B6CB  Supporting blue
-    | #BEE9E8  Soft cyan
-    | #CAE9FF  Soft information blue
-    | #E3F2FD  Very light blue surfaces
-    | #06D6A0  Success
-    | #FFD166  Attention
-    | #EF476F  Danger
-    | #80FFDB  Rare accent
-    | #4F6D7A  Neutral
-    |
-    */
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
 
     --color-sp-background: var(--sp-background);
     --color-sp-surface: var(--sp-surface);
     --color-sp-surface-muted: var(--sp-surface-muted);
+    --color-sp-surface-soft: var(--sp-surface-soft);
 
     --color-sp-primary: var(--sp-primary);
+    --color-sp-primary-hover: var(--sp-primary-hover);
     --color-sp-primary-foreground: var(--sp-primary-foreground);
-
-    --color-sp-secondary: var(--sp-secondary);
-    --color-sp-secondary-foreground: var(--sp-secondary-foreground);
 
     --color-sp-brand-dark: var(--sp-brand-dark);
     --color-sp-brand-foreground: var(--sp-brand-foreground);
+
+    --color-sp-accent: var(--sp-accent);
+    --color-sp-accent-foreground: var(--sp-accent-foreground);
 
     --color-sp-text: var(--sp-text);
     --color-sp-text-muted: var(--sp-text-muted);
@@ -52,158 +33,136 @@
     --color-sp-border-strong: var(--sp-border-strong);
 
     --color-sp-success: var(--sp-success);
+    --color-sp-success-soft: var(--sp-success-soft);
     --color-sp-success-foreground: var(--sp-success-foreground);
 
     --color-sp-warning: var(--sp-warning);
+    --color-sp-warning-soft: var(--sp-warning-soft);
     --color-sp-warning-foreground: var(--sp-warning-foreground);
 
     --color-sp-danger: var(--sp-danger);
+    --color-sp-danger-soft: var(--sp-danger-soft);
     --color-sp-danger-foreground: var(--sp-danger-foreground);
 
     --color-sp-info: var(--sp-info);
+    --color-sp-info-soft: var(--sp-info-soft);
     --color-sp-info-foreground: var(--sp-info-foreground);
 
-    --color-sp-accent: var(--sp-accent);
-    --color-sp-accent-foreground: var(--sp-accent-foreground);
+    --color-sp-sidebar: var(--sp-sidebar);
+    --color-sp-sidebar-text: var(--sp-sidebar-text);
+    --color-sp-sidebar-muted: var(--sp-sidebar-muted);
+    --color-sp-sidebar-hover: var(--sp-sidebar-hover);
+    --color-sp-sidebar-active: var(--sp-sidebar-active);
+    --color-sp-sidebar-active-text: var(--sp-sidebar-active-text);
 }
 
 @layer theme {
     :root {
         color-scheme: light;
 
-        /*
-        |--------------------------------------------------------------------------
-        | Surfaces
-        |--------------------------------------------------------------------------
-        */
+        /* =========================================================
+           LIGHT THEME
+        ========================================================== */
 
-        --sp-background: #CAF0F8;
-        --sp-surface: #FFFFFF;
-        --sp-surface-muted: #E3F2FD;
+        --sp-background: #EDEEDF;
 
-        /*
-        |--------------------------------------------------------------------------
-        | Brand
-        |--------------------------------------------------------------------------
-        */
+        --sp-surface: #FBFCF7;
+        --sp-surface-muted: #F4F5EC;
+        --sp-surface-soft: #E8EAE0;
 
-        --sp-primary: #118AB2;
+        --sp-primary: #015B63;
+        --sp-primary-hover: #01474E;
         --sp-primary-foreground: #FFFFFF;
 
-        --sp-secondary: #5FA8D3;
-        --sp-secondary-foreground: #123449;
-
-        --sp-brand-dark: #166088;
+        --sp-brand-dark: #143732;
         --sp-brand-foreground: #FFFFFF;
 
-        /*
-        |--------------------------------------------------------------------------
-        | Typography
-        |--------------------------------------------------------------------------
-        */
+        --sp-accent: #F5784E;
+        --sp-accent-foreground: #FFFFFF;
 
-        --sp-text: #24343D;
-        --sp-text-muted: #4F6D7A;
-        --sp-text-subtle: #6B7C84;
+        --sp-text: #143732;
+        --sp-text-muted: #4E635E;
+        --sp-text-subtle: #7E8F8A;
 
-        /*
-        |--------------------------------------------------------------------------
-        | Borders
-        |--------------------------------------------------------------------------
-        */
+        --sp-border: #E2E2E2;
+        --sp-border-strong: #D3D6CC;
 
-        --sp-border: #BEE9E8;
-        --sp-border-strong: #62B6CB;
+        --sp-success: #2F7D5B;
+        --sp-success-soft: #DBEBE0;
+        --sp-success-foreground: #1D5B40;
 
-        /*
-        |--------------------------------------------------------------------------
-        | Semantic states
-        |--------------------------------------------------------------------------
-        */
+        --sp-warning: #B8602C;
+        --sp-warning-soft: #FBE3D5;
+        --sp-warning-foreground: #7E3F1E;
 
-        --sp-success: #06D6A0;
-        --sp-success-foreground: #064E3B;
-
-        --sp-warning: #FFD166;
-        --sp-warning-foreground: #594200;
-
-        --sp-danger: #EF476F;
+        --sp-danger: #C93F39;
+        --sp-danger-soft: #FADFDD;
         --sp-danger-foreground: #FFFFFF;
 
-        --sp-info: #62B6CB;
-        --sp-info-foreground: #123B4A;
+        --sp-info: #7A4E86;
+        --sp-info-soft: #EFE0EE;
+        --sp-info-foreground: #633A6F;
 
-        --sp-accent: #80FFDB;
-        --sp-accent-foreground: #123B4A;
+        --sp-sidebar: #143732;
+        --sp-sidebar-text: #DCEBE7;
+        --sp-sidebar-muted: #82A69D;
+        --sp-sidebar-hover: rgba(255, 255, 255, 0.08);
+        --sp-sidebar-active: #015B63;
+        --sp-sidebar-active-text: #FFFFFF;
     }
 
     .dark {
         color-scheme: dark;
 
-        /*
-        |--------------------------------------------------------------------------
-        | Dark surfaces
-        |--------------------------------------------------------------------------
-        */
+        /* =========================================================
+           DARK THEME
+        ========================================================== */
 
-        --sp-background: #0F2730;
-        --sp-surface: #153640;
-        --sp-surface-muted: #1C4653;
+        --sp-background: #100E11;
 
-        /*
-        |--------------------------------------------------------------------------
-        | Brand
-        |--------------------------------------------------------------------------
-        */
+        --sp-surface: #2E2E2E;
+        --sp-surface-muted: #3A3A3A;
+        --sp-surface-soft: #454545;
 
-        --sp-primary: #62B6CB;
-        --sp-primary-foreground: #08232C;
+        --sp-primary: #4FC3C7;
+        --sp-primary-hover: #6FD3D6;
+        --sp-primary-foreground: #0A0A0A;
 
-        --sp-secondary: #5FA8D3;
-        --sp-secondary-foreground: #0E202A;
-
-        --sp-brand-dark: #166088;
+        --sp-brand-dark: #143732;
         --sp-brand-foreground: #FFFFFF;
 
-        /*
-        |--------------------------------------------------------------------------
-        | Typography
-        |--------------------------------------------------------------------------
-        */
+        --sp-accent: #F5784E;
+        --sp-accent-foreground: #FFFFFF;
 
-        --sp-text: #F0FAFC;
-        --sp-text-muted: #B9D0D7;
-        --sp-text-subtle: #8FAAB3;
+        --sp-text: #EAEAEA;
+        --sp-text-muted: #B8B8B8;
+        --sp-text-subtle: #8A8A8A;
 
-        /*
-        |--------------------------------------------------------------------------
-        | Borders
-        |--------------------------------------------------------------------------
-        */
+        --sp-border: #3F3F3F;
+        --sp-border-strong: #5A5A5A;
 
-        --sp-border: #2A5662;
-        --sp-border-strong: #3D7180;
+        --sp-success: #6FC49A;
+        --sp-success-soft: #1A3A2E;
+        --sp-success-foreground: #6FC49A;
 
-        /*
-        |--------------------------------------------------------------------------
-        | Semantic states
-        |--------------------------------------------------------------------------
-        */
+        --sp-warning: #F5A46B;
+        --sp-warning-soft: #3E2A17;
+        --sp-warning-foreground: #F5A46B;
 
-        --sp-success: #06D6A0;
-        --sp-success-foreground: #052E24;
-
-        --sp-warning: #FFD166;
-        --sp-warning-foreground: #3F3000;
-
-        --sp-danger: #EF476F;
+        --sp-danger: #F2706A;
+        --sp-danger-soft: #3E1F1D;
         --sp-danger-foreground: #FFFFFF;
 
-        --sp-info: #62B6CB;
-        --sp-info-foreground: #082630;
+        --sp-info: #D9A9D6;
+        --sp-info-soft: #33224A;
+        --sp-info-foreground: #D9A9D6;
 
-        --sp-accent: #80FFDB;
-        --sp-accent-foreground: #082630;
+        --sp-sidebar: #100E11;
+        --sp-sidebar-text: #D8D8D8;
+        --sp-sidebar-muted: #8A8A8A;
+        --sp-sidebar-hover: rgba(255, 255, 255, 0.07);
+        --sp-sidebar-active: #2B777A;
+        --sp-sidebar-active-text: #FFFFFF;
     }
 }
 
@@ -214,17 +173,20 @@
     }
 
     body {
-        min-height: 100vh;
-        background: var(--sp-background);
-        color: var(--sp-text);
-        font-family: var(--font-sans);
-        text-rendering: optimizeLegibility;
-        -webkit-font-smoothing: antialiased;
-    }
+    min-height: 100vh;
+    margin: 0;
+    background: var(--sp-background);
+    color: var(--sp-text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.5;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+}
 
     *,
-    ::after,
     ::before,
+    ::after,
     ::backdrop,
     ::file-selector-button {
         border-color: var(--sp-border);
@@ -235,18 +197,9 @@
         color: var(--sp-primary-foreground);
     }
 
-    a {
-        color: inherit;
-    }
-
     button,
     [role='button'] {
         -webkit-tap-highlight-color: transparent;
-    }
-
-    :focus-visible {
-        outline: 2px solid var(--sp-primary);
-        outline-offset: 2px;
     }
 
     input,
@@ -286,4 +239,55 @@
 
 @utility sp-subtle {
     color: var(--sp-text-subtle);
+}
+
+/* =========================================================
+   SWEETALERT2
+========================================================= */
+
+.stockpilot-swal-popup {
+    background: var(--sp-surface) !important;
+    color: var(--sp-text) !important;
+    border: 1px solid var(--sp-border) !important;
+    border-radius: 18px !important;
+}
+
+.stockpilot-swal-title {
+    color: var(--sp-text) !important;
+}
+
+.stockpilot-swal-html {
+    color: var(--sp-text-muted) !important;
+}
+
+.stockpilot-swal-confirm {
+    border: 0 !important;
+    border-radius: 10px !important;
+    background: var(--sp-primary) !important;
+    color: var(--sp-primary-foreground) !important;
+    padding: 10px 16px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+}
+
+.stockpilot-swal-confirm:hover {
+    background: var(--sp-primary-hover) !important;
+}
+
+.stockpilot-swal-cancel {
+    border: 1px solid var(--sp-border) !important;
+    border-radius: 10px !important;
+    background: var(--sp-surface-muted) !important;
+    color: var(--sp-text) !important;
+    padding: 10px 16px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+}
+
+.stockpilot-swal-cancel:hover {
+    background: var(--sp-surface-soft) !important;
+}
+
+.dark .swal2-popup {
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45) !important;
 }

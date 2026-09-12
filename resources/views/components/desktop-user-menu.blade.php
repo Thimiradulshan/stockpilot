@@ -1,186 +1,181 @@
-@php
-    $user = auth()->user();
-@endphp
-
 <div
     x-data="{ open: false }"
     class="relative w-full"
 >
-    {{-- Profile trigger --}}
     <button
         type="button"
-        x-on:click.stop="open = !open"
-        x-on:keydown.escape.window="open = false"
-        x-bind:aria-expanded="open"
-        aria-haspopup="menu"
-        aria-label="{{ __('Open account menu') }}"
+        @click="open = !open"
+        @keydown.escape.window="open = false"
+        :aria-expanded="open"
+        class="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2.5 text-left transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
         data-test="sidebar-menu-button"
-        class="group flex w-full items-center gap-3 rounded-xl p-2 text-left transition
-               hover:bg-white/10
-               focus-visible:outline-none
-               focus-visible:ring-2
-               focus-visible:ring-white/40"
+        aria-label="{{ __('Open profile menu') }}"
     >
-        {{-- Avatar --}}
-        <span
-            class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full
-                   bg-sp-primary text-sm font-bold text-white ring-2 ring-white/10"
-        >
-            @if ($user->profilePhotoUrl())
-                <img
-                    src="{{ $user->profilePhotoUrl() }}"
-                    alt="{{ $user->name }}"
-                    class="h-full w-full object-cover"
-                >
-            @else
-                {{ $user->initials() }}
-            @endif
-        </span>
 
-        {{-- User information --}}
+        @if (auth()->user()->profile_photo_path)
+
+            <img
+                src="{{ Storage::disk('public')->url(auth()->user()->profile_photo_path) }}"
+                alt="{{ auth()->user()->name }}"
+                class="h-10 w-10 shrink-0 rounded-full object-cover object-center ring-1 ring-white/10"
+                loading="eager"
+            >
+
+        @else
+
+            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sp-accent to-sp-danger text-xs font-bold text-white">
+                {{ auth()->user()->initials() }}
+            </span>
+
+        @endif
+
+
         <span
             x-show="sidebarIsExpanded()"
             x-transition.opacity.duration.100ms
             class="min-w-0 flex-1"
         >
-            <span class="block truncate text-sm font-semibold text-white">
-                {{ $user->name }}
+
+            <span class="block truncate text-sm font-bold text-white">
+                {{ auth()->user()->name }}
             </span>
 
-            <span class="mt-0.5 block truncate text-xs text-white/55">
-                {{ $user->roleEnum()->value }}
+            <span class="mt-0.5 block truncate text-xs text-sp-sidebar-muted">
+                {{ auth()->user()->email }}
             </span>
+
         </span>
 
-        {{-- Chevron --}}
-        <span
+
+        <svg
             x-show="sidebarIsExpanded()"
             x-transition.opacity.duration.100ms
-            class="shrink-0 text-white/45 transition-transform duration-200"
-            x-bind:class="{ 'rotate-180': open }"
+            class="h-4 w-4 shrink-0 text-white/50"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
         >
-            <x-stockpilot.icon
-                name="chevron-down"
-                class="h-4 w-4"
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="m6 9 6 6 6-6"
             />
-        </span>
+        </svg>
+
     </button>
 
-    {{-- Account menu --}}
+
     <div
         x-cloak
         x-show="open"
-        x-transition:enter="transition ease-out duration-150"
-        x-transition:enter-start="opacity-0 translate-y-1 scale-95"
-        x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-        x-transition:leave="transition ease-in duration-100"
-        x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-        x-transition:leave-end="opacity-0 translate-y-1 scale-95"
-        x-on:click.outside="open = false"
-        class="absolute bottom-full start-0 z-[9999] mb-3 w-64 overflow-hidden rounded-xl
-               border border-sp-border bg-sp-surface shadow-2xl
-               ring-1 ring-black/5"
-        role="menu"
-        aria-label="{{ __('Account menu') }}"
+        x-transition.origin.bottom.left
+        @click.outside="open = false"
+        class="absolute bottom-full start-0 z-50 mb-2 w-80 overflow-hidden rounded-2xl border border-sp-border bg-sp-surface shadow-2xl"
     >
-        {{-- Account information --}}
-        <div class="border-b border-sp-border px-4 py-3">
+
+        <div class="border-b border-sp-border bg-sp-surface-muted px-5 py-5">
+
             <div class="flex items-center gap-3">
-                <span
-                    class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full
-                           bg-sp-primary text-sm font-bold text-white"
-                >
-                    @if ($user->profilePhotoUrl())
-                        <img
-                            src="{{ $user->profilePhotoUrl() }}"
-                            alt="{{ $user->name }}"
-                            class="h-full w-full object-cover"
-                        >
-                    @else
-                        {{ $user->initials() }}
-                    @endif
-                </span>
+
+                @if (auth()->user()->profile_photo_path)
+
+                    <img
+                        src="{{ Storage::disk('public')->url(auth()->user()->profile_photo_path) }}"
+                        alt="{{ auth()->user()->name }}"
+                        class="h-12 w-12 shrink-0 rounded-full object-cover object-center shadow-sm"
+                    >
+
+                @else
+
+                    <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sp-accent to-sp-danger text-sm font-bold text-white">
+                        {{ auth()->user()->initials() }}
+                    </span>
+
+                @endif
+
 
                 <div class="min-w-0">
-                    <p class="truncate text-sm font-semibold text-sp-text">
-                        {{ $user->name }}
+
+                    <p class="truncate text-sm font-bold text-sp-text">
+                        {{ auth()->user()->name }}
                     </p>
 
                     <p class="truncate text-xs text-sp-text-muted">
-                        {{ $user->email }}
+                        {{ auth()->user()->email }}
                     </p>
 
-                    <p class="mt-1 text-[11px] font-semibold uppercase tracking-wide text-sp-primary">
-                        {{ $user->roleEnum()->value }}
-                    </p>
                 </div>
+
             </div>
+
         </div>
 
-        {{-- Menu actions --}}
-        <div class="p-1.5">
-            {{-- My Profile --}}
+
+        <div class="p-2">
+
             <a
                 href="{{ route('profile.edit') }}"
                 wire:navigate
-                x-on:click="open = false"
-                role="menuitem"
-                data-test="sidebar-profile-link"
-                class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium
-                       text-sp-text transition
-                       hover:bg-sp-surface-muted
-                       focus-visible:bg-sp-surface-muted
-                       focus-visible:outline-none"
+                @click="open = false"
+                class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-sp-text transition hover:bg-sp-surface-muted"
             >
-                <span
-                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg
-                           bg-sp-surface-muted text-sp-primary"
-                >
-                    <x-stockpilot.icon
-                        name="user"
+                <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-sp-info-soft text-sp-info-foreground">
+                    <svg
                         class="h-4 w-4"
-                    />
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                    >
+                        <circle cx="12" cy="8" r="3"/>
+                        <path d="M5 21c.8-4 3.1-6 7-6s6.2 2 7 6"/>
+                    </svg>
                 </span>
 
-                <span>
-                    {{ __('My Profile') }}
-                </span>
+                {{ __('My Profile') }}
             </a>
 
-            {{-- Logout --}}
+
+            <div class="my-1 border-t border-sp-border"></div>
+
+
             <form
                 method="POST"
                 action="{{ route('logout') }}"
-                class="mt-1 w-full"
-                x-on:submit="open = false"
             >
                 @csrf
 
                 <button
                     type="submit"
-                    role="menuitem"
-                    data-test="sidebar-logout-button"
-                    class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium
-                           text-sp-danger transition
-                           hover:bg-sp-danger/10
-                           focus-visible:bg-sp-danger/10
-                           focus-visible:outline-none"
+                    data-test="logout-button"
+                    class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-sp-danger transition hover:bg-sp-danger-soft"
                 >
-                    <span
-                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg
-                               bg-sp-danger/10 text-sp-danger"
-                    >
-                        <x-stockpilot.icon
-                            name="logout"
+
+                    <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-sp-danger-soft text-sp-danger">
+
+                        <svg
                             class="h-4 w-4"
-                        />
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                        >
+                            <path d="M10 17l5-5-5-5"/>
+                            <path d="M15 12H3"/>
+                            <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/>
+                        </svg>
+
                     </span>
 
-                    <span>
-                        {{ __('Log out') }}
-                    </span>
+                    {{ __('Log out') }}
+
                 </button>
+
             </form>
+
         </div>
+
     </div>
+
 </div>

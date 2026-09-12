@@ -3,25 +3,30 @@
     'href' => null,
 ])
 
-@php
-    $logoHref = $href ?? route('dashboard');
-@endphp
-
 <a
-    href="{{ $logoHref }}"
+    href="{{ $href ?? route('dashboard') }}"
     wire:navigate
     {{ $attributes->merge([
-        'class' => 'inline-flex min-w-0 items-center gap-3 shrink-0',
+        'class' => 'group inline-flex min-w-0 shrink-0 items-center gap-3',
     ]) }}
     aria-label="{{ config('app.name', 'StockPilot') }}"
 >
-    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sp-brand-dark text-white shadow-sm">
-        <x-app-logo-icon class="h-6 w-6" />
+    <span
+        class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sp-primary shadow-sm ring-1 ring-white/10"
+    >
+        <span class="absolute bottom-2 left-2 h-4 w-4 rounded-md bg-sp-accent"></span>
+        <span class="absolute right-2 top-2 h-4 w-4 rounded-md bg-white"></span>
     </span>
 
-    @unless ($sidebar)
-        <span class="truncate text-lg font-bold tracking-tight text-sp-brand-dark dark:text-white">
-            {{ config('app.name', 'StockPilot') }}
-        </span>
-    @endunless
+    <span
+        x-show="{{ $sidebar ? 'sidebarIsExpanded()' : 'true' }}"
+        x-transition.opacity.duration.150ms
+        @class([
+            'min-w-0 truncate text-[15px] font-extrabold tracking-tight',
+            'text-white' => $sidebar,
+            'text-sp-brand-dark dark:text-sp-text' => ! $sidebar,
+        ])
+    >
+        {{ config('app.name', 'StockPilot') }}
+    </span>
 </a>

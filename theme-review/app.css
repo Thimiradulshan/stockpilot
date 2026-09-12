@@ -1,0 +1,289 @@
+@import 'tailwindcss';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /*
+    |--------------------------------------------------------------------------
+    | StockPilot semantic color system
+    |--------------------------------------------------------------------------
+    |
+    | Core light palette
+    |
+    | #CAF0F8  Application background
+    | #166088  Brand / sidebar
+    | #118AB2  Primary actions
+    | #5FA8D3  Secondary blue
+    | #62B6CB  Supporting blue
+    | #BEE9E8  Soft cyan
+    | #CAE9FF  Soft information blue
+    | #E3F2FD  Very light blue surfaces
+    | #06D6A0  Success
+    | #FFD166  Attention
+    | #EF476F  Danger
+    | #80FFDB  Rare accent
+    | #4F6D7A  Neutral
+    |
+    */
+
+    --color-sp-background: var(--sp-background);
+    --color-sp-surface: var(--sp-surface);
+    --color-sp-surface-muted: var(--sp-surface-muted);
+
+    --color-sp-primary: var(--sp-primary);
+    --color-sp-primary-foreground: var(--sp-primary-foreground);
+
+    --color-sp-secondary: var(--sp-secondary);
+    --color-sp-secondary-foreground: var(--sp-secondary-foreground);
+
+    --color-sp-brand-dark: var(--sp-brand-dark);
+    --color-sp-brand-foreground: var(--sp-brand-foreground);
+
+    --color-sp-text: var(--sp-text);
+    --color-sp-text-muted: var(--sp-text-muted);
+    --color-sp-text-subtle: var(--sp-text-subtle);
+
+    --color-sp-border: var(--sp-border);
+    --color-sp-border-strong: var(--sp-border-strong);
+
+    --color-sp-success: var(--sp-success);
+    --color-sp-success-foreground: var(--sp-success-foreground);
+
+    --color-sp-warning: var(--sp-warning);
+    --color-sp-warning-foreground: var(--sp-warning-foreground);
+
+    --color-sp-danger: var(--sp-danger);
+    --color-sp-danger-foreground: var(--sp-danger-foreground);
+
+    --color-sp-info: var(--sp-info);
+    --color-sp-info-foreground: var(--sp-info-foreground);
+
+    --color-sp-accent: var(--sp-accent);
+    --color-sp-accent-foreground: var(--sp-accent-foreground);
+}
+
+@layer theme {
+    :root {
+        color-scheme: light;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Surfaces
+        |--------------------------------------------------------------------------
+        */
+
+        --sp-background: #CAF0F8;
+        --sp-surface: #FFFFFF;
+        --sp-surface-muted: #E3F2FD;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Brand
+        |--------------------------------------------------------------------------
+        */
+
+        --sp-primary: #118AB2;
+        --sp-primary-foreground: #FFFFFF;
+
+        --sp-secondary: #5FA8D3;
+        --sp-secondary-foreground: #123449;
+
+        --sp-brand-dark: #166088;
+        --sp-brand-foreground: #FFFFFF;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Typography
+        |--------------------------------------------------------------------------
+        */
+
+        --sp-text: #24343D;
+        --sp-text-muted: #4F6D7A;
+        --sp-text-subtle: #6B7C84;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Borders
+        |--------------------------------------------------------------------------
+        */
+
+        --sp-border: #BEE9E8;
+        --sp-border-strong: #62B6CB;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Semantic states
+        |--------------------------------------------------------------------------
+        */
+
+        --sp-success: #06D6A0;
+        --sp-success-foreground: #064E3B;
+
+        --sp-warning: #FFD166;
+        --sp-warning-foreground: #594200;
+
+        --sp-danger: #EF476F;
+        --sp-danger-foreground: #FFFFFF;
+
+        --sp-info: #62B6CB;
+        --sp-info-foreground: #123B4A;
+
+        --sp-accent: #80FFDB;
+        --sp-accent-foreground: #123B4A;
+    }
+
+    .dark {
+        color-scheme: dark;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Dark surfaces
+        |--------------------------------------------------------------------------
+        */
+
+        --sp-background: #0F2730;
+        --sp-surface: #153640;
+        --sp-surface-muted: #1C4653;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Brand
+        |--------------------------------------------------------------------------
+        */
+
+        --sp-primary: #62B6CB;
+        --sp-primary-foreground: #08232C;
+
+        --sp-secondary: #5FA8D3;
+        --sp-secondary-foreground: #0E202A;
+
+        --sp-brand-dark: #166088;
+        --sp-brand-foreground: #FFFFFF;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Typography
+        |--------------------------------------------------------------------------
+        */
+
+        --sp-text: #F0FAFC;
+        --sp-text-muted: #B9D0D7;
+        --sp-text-subtle: #8FAAB3;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Borders
+        |--------------------------------------------------------------------------
+        */
+
+        --sp-border: #2A5662;
+        --sp-border-strong: #3D7180;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Semantic states
+        |--------------------------------------------------------------------------
+        */
+
+        --sp-success: #06D6A0;
+        --sp-success-foreground: #052E24;
+
+        --sp-warning: #FFD166;
+        --sp-warning-foreground: #3F3000;
+
+        --sp-danger: #EF476F;
+        --sp-danger-foreground: #FFFFFF;
+
+        --sp-info: #62B6CB;
+        --sp-info-foreground: #082630;
+
+        --sp-accent: #80FFDB;
+        --sp-accent-foreground: #082630;
+    }
+}
+
+@layer base {
+    html {
+        min-height: 100%;
+        background: var(--sp-background);
+    }
+
+    body {
+        min-height: 100vh;
+        background: var(--sp-background);
+        color: var(--sp-text);
+        font-family: var(--font-sans);
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--sp-border);
+    }
+
+    ::selection {
+        background: var(--sp-primary);
+        color: var(--sp-primary-foreground);
+    }
+
+    a {
+        color: inherit;
+    }
+
+    button,
+    [role='button'] {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--sp-primary);
+        outline-offset: 2px;
+    }
+
+    input,
+    select,
+    textarea {
+        color: var(--sp-text);
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+        color: var(--sp-text-subtle);
+    }
+
+    option {
+        background: var(--sp-surface);
+        color: var(--sp-text);
+    }
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+@utility sp-page {
+    @apply mx-auto w-full max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8;
+}
+
+@utility sp-surface {
+    @apply rounded-xl border shadow-sm;
+    background-color: var(--sp-surface);
+    border-color: var(--sp-border);
+}
+
+@utility sp-muted {
+    color: var(--sp-text-muted);
+}
+
+@utility sp-subtle {
+    color: var(--sp-text-subtle);
+}
