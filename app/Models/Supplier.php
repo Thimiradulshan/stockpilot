@@ -24,6 +24,8 @@ class Supplier extends Model
 
     /**
      * Get the products supplied by this supplier.
+     *
+     * @return BelongsToMany<Product, $this>
      */
     public function products(): BelongsToMany
     {
@@ -38,6 +40,8 @@ class Supplier extends Model
 
     /**
      * Get the purchases associated with this supplier.
+     *
+     * @return HasMany<Purchase, $this>
      */
     public function purchases(): HasMany
     {

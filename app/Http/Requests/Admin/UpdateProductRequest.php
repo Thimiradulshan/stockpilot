@@ -18,6 +18,9 @@ class UpdateProductRequest extends FormRequest
             && $user->can('update', $product);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $product = $this->route('product');

@@ -143,7 +143,8 @@ class StockService
         ): StockMovement {
             $lockedProduct = Product::query()
                 ->lockForUpdate()
-                ->find($product->getKey());
+                ->whereKey($product->getKey())
+                ->first();
 
             if ($lockedProduct === null) {
                 throw new LogicException(
@@ -171,7 +172,7 @@ class StockService
 
             $quantityAfter = $quantityAfter->toScale(3);
 
-            $lockedProduct->quantity = (string) $quantityAfter;
+            $lockedProduct->quantity = $quantityAfter->toFloat();
             $lockedProduct->save();
 
             return $this->persistMovement(

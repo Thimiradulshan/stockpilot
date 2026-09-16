@@ -30,6 +30,8 @@ class Invoice extends Model
 
     /**
      * Customer associated with the invoice.
+     *
+     * @return BelongsTo<Customer, $this>
      */
     public function customer(): BelongsTo
     {
@@ -38,6 +40,8 @@ class Invoice extends Model
 
     /**
      * User who created the invoice.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function createdBy(): BelongsTo
     {
@@ -46,6 +50,8 @@ class Invoice extends Model
 
     /**
      * Items belonging to the invoice.
+     *
+     * @return HasMany<InvoiceItem, $this>
      */
     public function items(): HasMany
     {
@@ -54,6 +60,8 @@ class Invoice extends Model
 
     /**
      * Payments received against the invoice.
+     *
+     * @return HasMany<Payment, $this>
      */
     public function payments(): HasMany
     {

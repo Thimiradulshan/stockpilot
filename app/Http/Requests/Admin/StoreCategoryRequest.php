@@ -16,6 +16,9 @@ class StoreCategoryRequest extends FormRequest
             && $user->can('create', Category::class);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [

@@ -22,6 +22,8 @@ class Customer extends Model
 
     /**
      * Get the invoices associated with this customer.
+     *
+     * @return HasMany<Invoice, $this>
      */
     public function invoices(): HasMany
     {

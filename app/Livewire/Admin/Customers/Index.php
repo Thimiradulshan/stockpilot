@@ -4,7 +4,6 @@ namespace App\Livewire\Admin\Customers;
 
 use App\Models\Customer;
 use Illuminate\Contracts\View\View;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;

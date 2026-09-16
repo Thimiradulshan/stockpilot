@@ -1,14 +1,15 @@
 <?php
 
-use App\Concerns\ProfileValidationRules;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
 new #[Title('My Profile')] class extends Component {
-    use ProfileValidationRules, WithFileUploads;
+    use WithFileUploads;
 
     public string $name = '';
 
@@ -24,6 +25,34 @@ new #[Title('My Profile')] class extends Component {
 
         $this->name = $user->name;
         $this->email = $user->email;
+    }
+
+    /**
+     * Get the validation rules used to validate user names.
+     *
+     * @return array<int, mixed>
+     */
+    protected function nameRules(): array
+    {
+        return ['required', 'string', 'max:255'];
+    }
+
+    /**
+     * Get the validation rules used to validate user emails.
+     *
+     * @return array<int, mixed>
+     */
+    protected function emailRules(?int $userId = null): array
+    {
+        return [
+            'required',
+            'string',
+            'email',
+            'max:255',
+            $userId === null
+                ? Rule::unique(User::class)
+                : Rule::unique(User::class)->ignore($userId),
+        ];
     }
 
     /**

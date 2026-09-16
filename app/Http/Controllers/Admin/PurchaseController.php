@@ -23,9 +23,9 @@ class PurchaseController extends Controller
 
         $data = $request->validated();
 
-        $supplier = Supplier::query()->findOrFail(
-            $data['supplier_id']
-        );
+        $supplier = Supplier::query()
+            ->whereKey($data['supplier_id'])
+            ->firstOrFail();
 
         try {
             $purchaseService->create(

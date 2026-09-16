@@ -19,6 +19,8 @@ class InvoiceItem extends Model
 {
     /**
      * Invoice containing this line item.
+     *
+     * @return BelongsTo<Invoice, $this>
      */
     public function invoice(): BelongsTo
     {
@@ -27,6 +29,8 @@ class InvoiceItem extends Model
 
     /**
      * Product sold on this line.
+     *
+     * @return BelongsTo<Product, $this>
      */
     public function product(): BelongsTo
     {

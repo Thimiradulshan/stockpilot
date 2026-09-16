@@ -47,6 +47,8 @@ class StockMovement extends Model
 
     /**
      * The product affected by this stock movement.
+     *
+     * @return BelongsTo<Product, $this>
      */
     public function product(): BelongsTo
     {
@@ -55,6 +57,8 @@ class StockMovement extends Model
 
     /**
      * The user who created this stock movement.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function createdBy(): BelongsTo
     {

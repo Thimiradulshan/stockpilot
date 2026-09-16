@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -77,6 +78,8 @@ class User extends Authenticatable
 
     /**
      * Get purchases created by this user.
+     *
+     * @return HasMany<Purchase, $this>
      */
     public function purchases()
     {
@@ -85,6 +88,8 @@ class User extends Authenticatable
 
     /**
      * Get invoices created by this user.
+     *
+     * @return HasMany<Invoice, $this>
      */
     public function invoices()
     {
@@ -93,6 +98,8 @@ class User extends Authenticatable
 
     /**
      * Get payments received by this user.
+     *
+     * @return HasMany<Payment, $this>
      */
     public function payments()
     {
@@ -101,6 +108,8 @@ class User extends Authenticatable
 
     /**
      * Get stock movements created by this user.
+     *
+     * @return HasMany<StockMovement, $this>
      */
     public function stockMovements()
     {

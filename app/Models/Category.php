@@ -16,6 +16,8 @@ class Category extends Model
 
     /**
      * Get the products in this category.
+     *
+     * @return HasMany<Product, $this>
      */
     public function products(): HasMany
     {

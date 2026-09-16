@@ -365,7 +365,7 @@ class CustomerTest extends TestCase
         $customer = Customer::factory()->create();
 
         $response = $this->actingAs($user)->delete(
-            route('admin.customers.index') . '/' . $customer->id
+            route('admin.customers.index').'/'.$customer->id
         );
 
         $response->assertMethodNotAllowed();

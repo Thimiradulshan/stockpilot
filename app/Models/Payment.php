@@ -25,6 +25,8 @@ class Payment extends Model
 
     /**
      * Invoice that received this payment.
+     *
+     * @return BelongsTo<Invoice, $this>
      */
     public function invoice(): BelongsTo
     {
@@ -33,6 +35,8 @@ class Payment extends Model
 
     /**
      * User who received this payment.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function receivedBy(): BelongsTo
     {

@@ -79,7 +79,8 @@ class PurchaseService
         ): Purchase {
             $lockedSupplier = Supplier::query()
                 ->lockForUpdate()
-                ->find($supplier->getKey());
+                ->whereKey($supplier->getKey())
+                ->first();
 
             if ($lockedSupplier === null) {
                 throw new ModelNotFoundException(
@@ -231,7 +232,8 @@ class PurchaseService
         ): Purchase {
             $lockedPurchase = Purchase::query()
                 ->lockForUpdate()
-                ->find($purchase->getKey());
+                ->whereKey($purchase->getKey())
+                ->first();
 
             if ($lockedPurchase === null) {
                 throw new ModelNotFoundException(
@@ -367,12 +369,6 @@ class PurchaseService
         $productIds = [];
 
         foreach ($items as $index => $item) {
-            if (! is_array($item)) {
-                throw new InvalidArgumentException(
-                    "Purchase item {$index} must be an array."
-                );
-            }
-
             if (
                 ! array_key_exists('product_id', $item)
                 || ! is_numeric($item['product_id'])
@@ -698,7 +694,7 @@ class PurchaseService
         }
 
         if (
-            $date === false
+            ! $date instanceof CarbonImmutable
             || $date->format('Y-m-d') !== $value
         ) {
             throw new InvalidArgumentException(

@@ -19,6 +19,8 @@ class PurchaseItem extends Model
 {
     /**
      * Purchase containing this line item.
+     *
+     * @return BelongsTo<Purchase, $this>
      */
     public function purchase(): BelongsTo
     {
@@ -27,6 +29,8 @@ class PurchaseItem extends Model
 
     /**
      * Product received on this line.
+     *
+     * @return BelongsTo<Product, $this>
      */
     public function product(): BelongsTo
     {

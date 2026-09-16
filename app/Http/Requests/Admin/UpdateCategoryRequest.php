@@ -18,6 +18,9 @@ class UpdateCategoryRequest extends FormRequest
             && $user->can('update', $category);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $category = $this->route('category');

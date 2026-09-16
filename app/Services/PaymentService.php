@@ -53,7 +53,8 @@ class PaymentService
         ): Payment {
             $lockedInvoice = Invoice::query()
                 ->lockForUpdate()
-                ->find($invoice->getKey());
+                ->whereKey($invoice->getKey())
+                ->first();
 
             if ($lockedInvoice === null) {
                 throw new ModelNotFoundException(

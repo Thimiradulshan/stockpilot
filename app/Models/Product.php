@@ -27,6 +27,8 @@ class Product extends Model
 
     /**
      * Get the category for this product.
+     *
+     * @return BelongsTo<Category, $this>
      */
     public function category(): BelongsTo
     {
@@ -35,6 +37,8 @@ class Product extends Model
 
     /**
      * Get the suppliers associated with this product.
+     *
+     * @return BelongsToMany<Supplier, $this>
      */
     public function suppliers(): BelongsToMany
     {
@@ -49,6 +53,8 @@ class Product extends Model
 
     /**
      * Get the purchase items for this product.
+     *
+     * @return HasMany<PurchaseItem, $this>
      */
     public function purchaseItems(): HasMany
     {
@@ -57,6 +63,8 @@ class Product extends Model
 
     /**
      * Get the invoice items for this product.
+     *
+     * @return HasMany<InvoiceItem, $this>
      */
     public function invoiceItems(): HasMany
     {
@@ -65,6 +73,8 @@ class Product extends Model
 
     /**
      * Get the stock movements for this product.
+     *
+     * @return HasMany<StockMovement, $this>
      */
     public function stockMovements(): HasMany
     {

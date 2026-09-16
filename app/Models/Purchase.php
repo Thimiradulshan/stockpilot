@@ -28,6 +28,8 @@ class Purchase extends Model
 
     /**
      * Supplier associated with the purchase.
+     *
+     * @return BelongsTo<Supplier, $this>
      */
     public function supplier(): BelongsTo
     {
@@ -36,6 +38,8 @@ class Purchase extends Model
 
     /**
      * User who created the purchase.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function createdBy(): BelongsTo
     {
@@ -44,6 +48,8 @@ class Purchase extends Model
 
     /**
      * Items belonging to the purchase.
+     *
+     * @return HasMany<PurchaseItem, $this>
      */
     public function items(): HasMany
     {
