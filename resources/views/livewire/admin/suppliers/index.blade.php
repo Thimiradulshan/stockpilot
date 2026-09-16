@@ -1,5 +1,4 @@
-<div
-    class="sp-page min-h-[calc(100vh-4rem)] bg-sp-background"
+<x-stockpilot.admin-page
     x-data="{
         createOpen: false,
         editOpen: false,
@@ -21,723 +20,724 @@
             this.createOpen = false;
             this.editOpen = false;
             this.editingSupplier = null;
-        }
+        },
     }"
-    x-on:keydown.escape.window="closeModals()"
+    escapeAction="closeModals()"
 >
-    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
 
-        <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-sp-primary">
-                    <x-stockpilot.icon name="suppliers" class="h-4 w-4" />
-                    {{ __('Master data') }}
-                </div>
-
-                <h1 class="mt-1 text-2xl font-bold tracking-tight text-sp-brand-dark dark:text-white">
-                    {{ __('Suppliers') }}
-                </h1>
-
-                <p class="mt-1 text-sm text-sp-text-muted">
-                    {{ __('Manage supplier contacts and purchasing relationships.') }}
-                </p>
-            </div>
-
+    <x-stockpilot.page-header
+        :section-label="__('Master data')"
+        :section-current="__('Suppliers')"
+        :title="__('Suppliers')"
+        :subtitle="__('Supplier catalog')"
+        :description="__('Manage supplier contacts and purchasing relationships.')"
+        :tags="[
+            ['label' => __('Catalog'), 'tone' => 'primary'],
+            ['label' => __('Active'), 'tone' => 'success'],
+        ]"
+    >
+        <x-slot:actions>
             @can('create', \App\Models\Supplier::class)
-                <button
-                    type="button"
-                    x-on:click="openCreate()"
-                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-sp-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sp-brand-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sp-primary/40"
-                >
-                    <x-stockpilot.icon name="plus" class="h-4 w-4" />
-                    {{ __('Add supplier') }}
-                </button>
+                <x-stockpilot.primary-action
+                    :label="__('Add supplier')"
+                    icon="suppliers"
+                    click="openCreate()"
+                />
             @endcan
-        </div>
+        </x-slot:actions>
+    </x-stockpilot.page-header>
 
-        <div class="mb-6">
-            <x-stockpilot.tabs
-                :items="[
-                    [
-                        'label' => 'Products',
-                        'route' => route('admin.products.index'),
-                        'active' => request()->routeIs('admin.products.*'),
-                    ],
-                    [
-                        'label' => 'Categories',
-                        'route' => route('admin.categories.index'),
-                        'active' => request()->routeIs('admin.categories.*'),
-                    ],
-                    [
-                        'label' => 'Suppliers',
-                        'route' => route('admin.suppliers.index'),
-                        'active' => request()->routeIs('admin.suppliers.*'),
-                    ],
-                ]"
+    <x-stockpilot.master-data-tabs />
+
+    <x-stockpilot.toast-alerts />
+
+    <section aria-label="{{ __('Supplier summary') }}">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+
+            <x-stockpilot.kpi-card
+                :label="__('Total suppliers')"
+                :value="number_format($totalSuppliers)"
+                :hint="__('Entire supplier catalog')"
+                icon="suppliers"
+                tone="primary"
+                action="clearFilters()"
+                :active="! $this->hasActiveFilters()"
+            />
+
+            <x-stockpilot.kpi-card
+                :label="__('Active suppliers')"
+                :value="number_format($activeSuppliers)"
+                :hint="__('Available for purchasing')"
+                icon="check"
+                tone="success"
+                action="$set('status', 'active')"
+                :active="$status === 'active'"
+            />
+
+            <x-stockpilot.kpi-card
+                :label="__('Inactive suppliers')"
+                :value="number_format($inactiveSuppliers)"
+                :hint="__('Retained for history')"
+                icon="x-circle"
+                tone="info"
+                action="$set('status', 'inactive')"
+                :active="$status === 'inactive'"
+            />
+
+        </div>
+    </section>
+
+    <x-stockpilot.filter-bar aria-label="{{ __('Supplier filters') }}">
+
+        <div class="w-full lg:max-w-2xl">
+            <x-stockpilot.search-input
+                id="supplier-search"
+                wire:model.live.debounce.300ms="search"
+                :placeholder="__('Search by name, company, phone or email...')"
             />
         </div>
 
-        @if (session('success'))
-            <div class="mb-5 rounded-xl border border-sp-success/20 bg-sp-success/10 px-4 py-3 text-sm font-medium text-sp-success">
-                {{ session('success') }}
-            </div>
-        @endif
+        <div class="flex flex-wrap items-center gap-2">
 
-        @if ($errors->any())
-            <div class="mb-5 rounded-xl border border-sp-danger/20 bg-sp-danger/10 px-4 py-3">
-                <p class="text-sm font-semibold text-sp-danger">
-                    {{ __('Please correct the following errors.') }}
-                </p>
+            <select
+                wire:model.live="status"
+                class="rounded-xl border border-sp-border-strong bg-sp-surface px-4 py-3.5 text-sm font-bold text-sp-text shadow-sm outline-none transition focus:border-sp-primary focus:ring-4 focus:ring-sp-primary/10 dark:border-sp-border-strong dark:bg-sp-surface-soft dark:text-sp-text dark:focus:border-sp-success"
+            >
+                <option value="">{{ __('All statuses') }}</option>
+                <option value="active">{{ __('Active') }}</option>
+                <option value="inactive">{{ __('Inactive') }}</option>
+            </select>
 
-                <ul class="mt-2 space-y-1 text-sm text-sp-danger/90">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+            @if ($this->hasActiveFilters())
+                <button
+                    type="button"
+                    wire:click="clearFilters"
+                    class="rounded-xl border border-sp-info/30 bg-sp-info-soft px-4 py-3.5 text-sm font-extrabold text-sp-info-foreground shadow-sm transition hover:bg-sp-info-soft dark:bg-sp-info-soft dark:text-sp-info"
+                >
+                    {{ __('Clear filters') }}
+                </button>
+            @endif
 
-        <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div class="rounded-2xl border border-sp-border bg-sp-surface p-5 shadow-sm">
-                <p class="text-xs font-bold uppercase tracking-[0.12em] text-sp-text-muted">
-                    {{ __('Total suppliers') }}
-                </p>
-
-                <p class="mt-2 text-3xl font-bold text-sp-brand-dark dark:text-white">
-                    {{ number_format($totalSuppliers) }}
-                </p>
-            </div>
-
-            <div class="rounded-2xl border border-sp-border bg-sp-surface p-5 shadow-sm">
-                <p class="text-xs font-bold uppercase tracking-[0.12em] text-sp-text-muted">
-                    {{ __('Active') }}
-                </p>
-
-                <p class="mt-2 text-3xl font-bold text-sp-success">
-                    {{ number_format($activeSuppliers) }}
-                </p>
-            </div>
-
-            <div class="rounded-2xl border border-sp-border bg-sp-surface p-5 shadow-sm">
-                <p class="text-xs font-bold uppercase tracking-[0.12em] text-sp-text-muted">
-                    {{ __('Inactive') }}
-                </p>
-
-                <p class="mt-2 text-3xl font-bold text-sp-warning">
-                    {{ number_format($inactiveSuppliers) }}
-                </p>
-            </div>
         </div>
 
-        <div class="mb-6 rounded-2xl border border-sp-border bg-sp-surface p-4 shadow-sm sm:p-5">
-            <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px_auto] lg:items-end">
-                <div>
-                    <label
-                        for="supplier-search"
-                        class="mb-2 block text-sm font-semibold text-sp-text"
-                    >
-                        {{ __('Search suppliers') }}
-                    </label>
+    </x-stockpilot.filter-bar>
 
-                    <input
-                        id="supplier-search"
-                        type="search"
-                        wire:model.live.debounce.300ms="search"
-                        placeholder="{{ __('Name, company, phone or email...') }}"
-                        class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3 py-2.5 text-sm text-sp-text outline-none placeholder:text-sp-text-muted focus:border-sp-primary focus:ring-2 focus:ring-sp-primary/10"
-                    />
-                </div>
+    <x-stockpilot.page-table mobile="lg" aria-label="{{ __('Supplier catalog') }}">
 
-                <div>
-                    <label
-                        for="supplier-status"
-                        class="mb-2 block text-sm font-semibold text-sp-text"
-                    >
+        <table class="min-w-full border-collapse">
+
+            <thead class="bg-gradient-to-r from-sp-primary/15 via-sp-surface-muted to-sp-info-soft/70 dark:from-sp-brand-dark dark:via-sp-surface-muted dark:to-sp-info-soft">
+
+                <tr class="border-b border-sp-border-strong dark:border-sp-border-strong">
+
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-extrabold uppercase tracking-[0.10em] text-sp-text">
+                        {{ __('Supplier') }}
+                    </th>
+
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-extrabold uppercase tracking-[0.10em] text-sp-text">
+                        {{ __('Contact') }}
+                    </th>
+
+                    <th scope="col" class="px-6 py-4 text-center text-xs font-extrabold uppercase tracking-[0.10em] text-sp-text">
+                        {{ __('Products') }}
+                    </th>
+
+                    <th scope="col" class="px-6 py-4 text-center text-xs font-extrabold uppercase tracking-[0.10em] text-sp-text">
+                        {{ __('Purchases') }}
+                    </th>
+
+                    <th scope="col" class="px-6 py-4 text-center text-xs font-extrabold uppercase tracking-[0.10em] text-sp-text">
                         {{ __('Status') }}
-                    </label>
+                    </th>
 
-                    <select
-                        id="supplier-status"
-                        wire:model.live="status"
-                        class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3 py-2.5 text-sm text-sp-text outline-none focus:border-sp-primary focus:ring-2 focus:ring-sp-primary/10"
+                    <th scope="col" class="w-[180px] px-6 py-4 text-left text-xs font-extrabold uppercase tracking-[0.10em] text-sp-text">
+                        {{ __('Actions') }}
+                    </th>
+
+                </tr>
+
+            </thead>
+
+            <tbody class="divide-y divide-sp-border dark:divide-sp-border">
+
+                @forelse ($suppliers as $supplier)
+
+                    <tr
+                        wire:key="supplier-row-{{ $supplier->id }}"
+                        class="group transition duration-150 odd:bg-sp-surface even:bg-sp-surface-muted/40 hover:bg-sp-primary/[0.04] dark:odd:bg-sp-surface dark:even:bg-sp-surface-muted dark:hover:bg-sp-brand-dark/70"
                     >
-                        <option value="">{{ __('All statuses') }}</option>
-                        <option value="active">{{ __('Active') }}</option>
-                        <option value="inactive">{{ __('Inactive') }}</option>
-                    </select>
-                </div>
 
-                <div>
-                    @if ($this->hasActiveFilters())
-                        <button
-                            type="button"
-                            wire:click="clearFilters"
-                            class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-sp-border bg-sp-surface px-4 py-2.5 text-sm font-semibold text-sp-text transition hover:bg-sp-surface-muted lg:w-auto"
-                        >
-                            {{ __('Clear') }}
-                        </button>
-                    @endif
-                </div>
-            </div>
-        </div>
+                        <td class="px-6 py-5">
 
-        <div class="hidden overflow-hidden rounded-2xl border border-sp-border bg-sp-surface shadow-sm lg:block">
-            <div class="border-b border-sp-border px-5 py-4">
-                <div class="flex items-center justify-between gap-4">
-                    <div>
-                        <h2 class="font-bold text-sp-brand-dark dark:text-white">
-                            {{ __('Supplier catalog') }}
-                        </h2>
+                            <div class="flex min-w-0 items-center gap-3">
 
-                        <p class="mt-1 text-xs text-sp-text-muted">
-                            {{ __('Supplier contacts and connected purchasing activity.') }}
-                        </p>
-                    </div>
+                                <div class="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-sp-primary/25 to-sp-info-soft text-sp-primary shadow-sm dark:from-sp-brand-dark dark:to-sp-info-soft dark:text-sp-success">
 
-                    <span class="text-sm font-medium text-sp-text-muted">
-                        {{ $suppliers->total() }} {{ __('results') }}
-                    </span>
-                </div>
-            </div>
+                                    <span class="absolute -right-2 -top-2 h-7 w-7 rounded-full bg-sp-accent/25"></span>
 
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-sp-border">
-                    <thead class="bg-sp-surface-muted">
-                        <tr>
-                            <th class="px-5 py-3 text-start text-xs font-bold uppercase tracking-[0.08em] text-sp-text-muted">
-                                {{ __('Supplier') }}
-                            </th>
+                                    <span class="relative text-sm font-extrabold">
+                                        {{ strtoupper(mb_substr($supplier->name, 0, 1)) }}
+                                    </span>
 
-                            <th class="px-5 py-3 text-start text-xs font-bold uppercase tracking-[0.08em] text-sp-text-muted">
-                                {{ __('Contact') }}
-                            </th>
+                                </div>
 
-                            <th class="px-5 py-3 text-start text-xs font-bold uppercase tracking-[0.08em] text-sp-text-muted">
-                                {{ __('Products') }}
-                            </th>
+                                <div class="min-w-0">
 
-                            <th class="px-5 py-3 text-start text-xs font-bold uppercase tracking-[0.08em] text-sp-text-muted">
-                                {{ __('Purchases') }}
-                            </th>
-
-                            <th class="px-5 py-3 text-start text-xs font-bold uppercase tracking-[0.08em] text-sp-text-muted">
-                                {{ __('Status') }}
-                            </th>
-
-                            <th class="px-5 py-3 text-end text-xs font-bold uppercase tracking-[0.08em] text-sp-text-muted">
-                                {{ __('Actions') }}
-                            </th>
-                        </tr>
-                    </thead>
-
-                    <tbody class="divide-y divide-sp-border">
-                        @forelse ($suppliers as $supplier)
-                            <tr class="transition hover:bg-sp-surface-muted/60">
-                                <td class="px-5 py-4 align-top">
-                                    <p class="font-semibold text-sp-text">
+                                    <p class="truncate text-[15px] font-extrabold text-sp-text">
                                         {{ $supplier->name }}
                                     </p>
 
                                     @if ($supplier->company)
-                                        <p class="mt-1 text-sm text-sp-text-muted">
+                                        <p class="mt-1 truncate text-xs font-semibold text-sp-text-subtle">
                                             {{ $supplier->company }}
                                         </p>
                                     @endif
-                                </td>
 
-                                <td class="px-5 py-4 align-top">
+                                </div>
+
+                            </div>
+
+                        </td>
+
+                        <td class="max-w-[320px] px-6 py-5">
+
+                            @if ($supplier->phone || $supplier->email)
+
+                                <div class="space-y-1">
+
                                     @if ($supplier->phone)
-                                        <p class="text-sm font-medium text-sp-text">
+                                        <p class="text-sm font-semibold text-sp-text">
                                             {{ $supplier->phone }}
                                         </p>
                                     @endif
 
                                     @if ($supplier->email)
-                                        <p class="mt-1 text-sm text-sp-text-muted">
+                                        <p class="truncate text-sm text-sp-text-muted">
                                             {{ $supplier->email }}
                                         </p>
                                     @endif
 
-                                    @if (! $supplier->phone && ! $supplier->email)
-                                        <span class="text-sm text-sp-text-muted">
-                                            {{ __('No contact details') }}
-                                        </span>
-                                    @endif
-                                </td>
+                                </div>
 
-                                <td class="px-5 py-4 text-sm font-medium text-sp-text">
-                                    {{ number_format($supplier->products_count) }}
-                                </td>
+                            @else
 
-                                <td class="px-5 py-4 text-sm font-medium text-sp-text">
-                                    {{ number_format($supplier->purchases_count) }}
-                                </td>
+                                <p class="text-sm text-sp-text-subtle">
+                                    {{ __('No contact details') }}
+                                </p>
 
-                                <td class="px-5 py-4">
-                                    @if ($supplier->status === 'active')
-                                        <span class="inline-flex rounded-full bg-sp-success/10 px-2.5 py-1 text-xs font-bold text-sp-success">
-                                            {{ __('Active') }}
-                                        </span>
-                                    @else
-                                        <span class="inline-flex rounded-full bg-sp-warning/10 px-2.5 py-1 text-xs font-bold text-sp-warning">
-                                            {{ __('Inactive') }}
-                                        </span>
-                                    @endif
-                                </td>
+                            @endif
 
-                                <td class="px-5 py-4 text-end">
-                                    @can('update', $supplier)
+                        </td>
+
+                        <td class="px-6 py-5 text-center">
+
+                            <span class="inline-flex min-w-12 items-center justify-center rounded-xl bg-sp-primary/10 px-3 py-2 text-sm font-extrabold text-sp-primary shadow-sm dark:bg-sp-primary/10 dark:text-sp-success">
+                                {{ number_format($supplier->products_count) }}
+                            </span>
+
+                        </td>
+
+                        <td class="px-6 py-5 text-center">
+
+                            <span class="inline-flex min-w-12 items-center justify-center rounded-xl bg-sp-info-soft px-3 py-2 text-sm font-extrabold text-sp-info-foreground shadow-sm dark:bg-sp-info-soft dark:text-sp-info">
+                                {{ number_format($supplier->purchases_count) }}
+                            </span>
+
+                        </td>
+
+                        <td class="px-6 py-5 text-center">
+
+                            @if ($supplier->status === 'active')
+                                <x-stockpilot.status-badge :label="__('Active')" tone="success" />
+                            @else
+                                <x-stockpilot.status-badge :label="__('Inactive')" tone="info" />
+                            @endif
+
+                        </td>
+
+                        <td class="px-6 py-5">
+
+                            @can('update', $supplier)
+
+                                <button
+                                    type="button"
+                                    @click="openEdit(@js([
+                                        'id' => $supplier->id,
+                                        'name' => $supplier->name,
+                                        'company' => $supplier->company,
+                                        'phone' => $supplier->phone,
+                                        'email' => $supplier->email,
+                                        'address' => $supplier->address,
+                                        'status' => $supplier->status,
+                                    ]))"
+                                    class="inline-flex items-center gap-2 rounded-xl border border-sp-border-strong bg-sp-surface px-3.5 py-2.5 text-sm font-extrabold text-sp-text shadow-sm transition hover:border-sp-primary/30 hover:bg-sp-primary/10 hover:text-sp-primary focus:outline-none focus:ring-2 focus:ring-sp-primary/20 dark:border-sp-border-strong dark:bg-sp-surface-muted dark:text-sp-text dark:hover:bg-sp-surface-muted dark:hover:text-sp-success"
+                                >
+                                    <x-stockpilot.icon name="edit" class="h-4 w-4" />
+                                    {{ __('Edit') }}
+                                </button>
+
+                            @endcan
+
+                        </td>
+
+                    </tr>
+
+                @empty
+
+                    <tr>
+                        <td colspan="6" class="px-6 py-20 text-center">
+
+                            <x-stockpilot.empty-state
+                                icon="suppliers"
+                                :title="$this->hasActiveFilters() ? __('No matching suppliers') : __('No suppliers yet')"
+                                :message="$this->hasActiveFilters() ? __('Try changing your search or status filter.') : __('Create your first supplier to manage your purchasing relationships.')"
+                            >
+                                @if ($this->hasActiveFilters())
+                                    <button
+                                        type="button"
+                                        wire:click="clearFilters"
+                                        class="rounded-xl border border-sp-border-strong bg-sp-surface px-4 py-2.5 text-sm font-bold text-sp-text transition hover:bg-sp-surface-muted"
+                                    >
+                                        {{ __('Clear filters') }}
+                                    </button>
+                                @endif
+
+                                @can('create', \App\Models\Supplier::class)
+                                    @if (! $this->hasActiveFilters())
                                         <button
                                             type="button"
-                                            @click="openEdit(@js(['id' => $supplier->id, 'name' => $supplier->name, 'company' => $supplier->company, 'phone' => $supplier->phone, 'email' => $supplier->email, 'address' => $supplier->address, 'status' => $supplier->status]))"
-                                            class="inline-flex items-center gap-2 rounded-lg border border-sp-border px-3 py-2 text-xs font-bold text-sp-text transition hover:bg-sp-surface-muted"
+                                            @click="openCreate()"
+                                            class="rounded-xl bg-sp-primary px-4 py-2.5 text-sm font-bold text-sp-primary-foreground shadow-md transition hover:bg-sp-primary-hover"
                                         >
-                                            <x-stockpilot.icon name="edit" class="h-4 w-4" />
-                                            {{ __('Edit') }}
+                                            {{ __('Add supplier') }}
                                         </button>
-                                    @endcan
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="px-5 py-12 text-center">
-                                    <p class="font-bold text-sp-text">
-                                        {{ __('No suppliers found') }}
-                                    </p>
+                                    @endif
+                                @endcan
+                            </x-stockpilot.empty-state>
 
-                                    <p class="mt-1 text-sm text-sp-text-muted">
-                                        {{ __('Try changing your search or create a new supplier.') }}
-                                    </p>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                        </td>
+                    </tr>
 
-            @if ($suppliers->hasPages())
-                <div class="border-t border-sp-border px-5 py-4">
-                    {{ $suppliers->links() }}
-                </div>
-            @endif
-        </div>
+                @endforelse
 
-        <div class="space-y-4 lg:hidden">
-            @forelse ($suppliers as $supplier)
-                <article class="rounded-2xl border border-sp-border bg-sp-surface p-4 shadow-sm">
-                    <div class="flex items-start justify-between gap-4">
+            </tbody>
+
+        </table>
+
+    </x-stockpilot.page-table>
+
+    <div class="space-y-3 lg:hidden">
+
+        @forelse ($suppliers as $supplier)
+
+            <article class="rounded-2xl border border-sp-border bg-sp-surface p-4 shadow-sm dark:border-sp-border dark:bg-sp-surface">
+
+                <div class="flex items-start justify-between gap-3">
+
+                    <div class="flex min-w-0 items-center gap-3">
+
+                        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sp-primary/10 text-sm font-bold text-sp-primary dark:bg-sp-primary/10 dark:text-sp-success">
+                            {{ strtoupper(mb_substr($supplier->name, 0, 1)) }}
+                        </div>
+
                         <div class="min-w-0">
-                            <h3 class="font-bold text-sp-text">
+
+                            <h3 class="truncate text-sm font-bold text-sp-text">
                                 {{ $supplier->name }}
                             </h3>
 
                             @if ($supplier->company)
-                                <p class="mt-1 text-sm text-sp-text-muted">
+                                <p class="mt-0.5 truncate text-xs text-sp-text-subtle">
                                     {{ $supplier->company }}
                                 </p>
                             @endif
+
                         </div>
 
-                        @if ($supplier->status === 'active')
-                            <span class="shrink-0 rounded-full bg-sp-success/10 px-2.5 py-1 text-xs font-bold text-sp-success">
-                                {{ __('Active') }}
-                            </span>
-                        @else
-                            <span class="shrink-0 rounded-full bg-sp-warning/10 px-2.5 py-1 text-xs font-bold text-sp-warning">
-                                {{ __('Inactive') }}
-                            </span>
-                        @endif
                     </div>
 
-                    <div class="mt-4 space-y-2 text-sm">
+                    @if ($supplier->status === 'active')
+                        <x-stockpilot.status-badge :label="__('Active')" tone="success" />
+                    @else
+                        <x-stockpilot.status-badge :label="__('Inactive')" tone="info" />
+                    @endif
+
+                </div>
+
+                @if ($supplier->phone || $supplier->email || $supplier->address)
+
+                    <div class="mt-4 rounded-xl bg-sp-surface-muted p-3 dark:bg-sp-surface-muted">
+
                         @if ($supplier->phone)
-                            <p class="text-sp-text">
-                                <span class="font-semibold">{{ __('Phone') }}:</span>
+                            <p class="text-sm font-semibold text-sp-text">
                                 {{ $supplier->phone }}
                             </p>
                         @endif
 
                         @if ($supplier->email)
-                            <p class="break-all text-sp-text">
-                                <span class="font-semibold">{{ __('Email') }}:</span>
+                            <p class="mt-1 break-all text-sm text-sp-text-muted">
                                 {{ $supplier->email }}
                             </p>
                         @endif
 
                         @if ($supplier->address)
-                            <p class="text-sp-text">
-                                <span class="font-semibold">{{ __('Address') }}:</span>
+                            <p class="mt-2 text-sm leading-6 text-sp-text-muted">
                                 {{ $supplier->address }}
                             </p>
                         @endif
+
                     </div>
 
-                    <div class="mt-4 grid grid-cols-2 gap-3">
-                        <div class="rounded-xl bg-sp-surface-muted px-3 py-3">
-                            <p class="text-xs font-bold uppercase tracking-[0.08em] text-sp-text-muted">
-                                {{ __('Products') }}
-                            </p>
+                @endif
 
-                            <p class="mt-1 text-lg font-bold text-sp-text">
-                                {{ number_format($supplier->products_count) }}
-                            </p>
-                        </div>
+                <div class="mt-4 grid grid-cols-2 gap-3">
 
-                        <div class="rounded-xl bg-sp-surface-muted px-3 py-3">
-                            <p class="text-xs font-bold uppercase tracking-[0.08em] text-sp-text-muted">
-                                {{ __('Purchases') }}
-                            </p>
+                    <div class="rounded-xl bg-sp-surface-muted px-3 py-3 dark:bg-sp-surface-muted">
+                        <p class="text-xs font-bold uppercase tracking-[0.08em] text-sp-text-subtle">
+                            {{ __('Products') }}
+                        </p>
 
-                            <p class="mt-1 text-lg font-bold text-sp-text">
-                                {{ number_format($supplier->purchases_count) }}
-                            </p>
-                        </div>
-                    </div>
-
-                    @can('update', $supplier)
-                        <button
-                            type="button"
-                            @click="openEdit(@js(['id' => $supplier->id, 'name' => $supplier->name, 'company' => $supplier->company, 'phone' => $supplier->phone, 'email' => $supplier->email, 'address' => $supplier->address, 'status' => $supplier->status]))"
-                            class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-sp-border px-4 py-2.5 text-sm font-semibold text-sp-text transition hover:bg-sp-surface-muted"
-                        >
-                            <x-stockpilot.icon name="edit" class="h-4 w-4" />
-                            {{ __('Edit supplier') }}
-                        </button>
-                    @endcan
-                </article>
-            @empty
-                <div class="rounded-2xl border border-sp-border bg-sp-surface px-5 py-12 text-center shadow-sm">
-                    <p class="font-bold text-sp-text">
-                        {{ __('No suppliers found') }}
-                    </p>
-
-                    <p class="mt-1 text-sm text-sp-text-muted">
-                        {{ __('Try changing your search or create a new supplier.') }}
-                    </p>
-                </div>
-            @endforelse
-
-            @if ($suppliers->hasPages())
-                <div>
-                    {{ $suppliers->links() }}
-                </div>
-            @endif
-        </div>
-    </div>
-
-    @can('create', \App\Models\Supplier::class)
-        <div
-            x-cloak
-            x-show="createOpen"
-            x-transition.opacity
-            class="fixed inset-0 z-[70] flex items-center justify-center bg-sp-brand-dark/50 p-4 backdrop-blur-sm"
-            x-on:click.self="closeModals()"
-        >
-            <div
-                x-show="createOpen"
-                x-transition.scale.origin.center
-                class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-sp-border bg-sp-surface shadow-2xl"
-            >
-                <div class="flex items-start justify-between border-b border-sp-border px-5 py-4">
-                    <div>
-                        <h2 class="text-lg font-bold text-sp-brand-dark dark:text-white">
-                            {{ __('Add supplier') }}
-                        </h2>
-
-                        <p class="mt-1 text-sm text-sp-text-muted">
-                            {{ __('Create a supplier master record.') }}
+                        <p class="mt-1 text-lg font-bold text-sp-text">
+                            {{ number_format($supplier->products_count) }}
                         </p>
                     </div>
 
+                    <div class="rounded-xl bg-sp-surface-muted px-3 py-3 dark:bg-sp-surface-muted">
+                        <p class="text-xs font-bold uppercase tracking-[0.08em] text-sp-text-subtle">
+                            {{ __('Purchases') }}
+                        </p>
+
+                        <p class="mt-1 text-lg font-bold text-sp-text">
+                            {{ number_format($supplier->purchases_count) }}
+                        </p>
+                    </div>
+
+                </div>
+
+                @can('update', $supplier)
                     <button
                         type="button"
-                        x-on:click="closeModals()"
-                        class="flex h-9 w-9 items-center justify-center rounded-lg text-sp-text-muted transition hover:bg-sp-surface-muted hover:text-sp-text"
-                        aria-label="{{ __('Close') }}"
+                        @click="openEdit(@js([
+                            'id' => $supplier->id,
+                            'name' => $supplier->name,
+                            'company' => $supplier->company,
+                            'phone' => $supplier->phone,
+                            'email' => $supplier->email,
+                            'address' => $supplier->address,
+                            'status' => $supplier->status,
+                        ]))"
+                        class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-sp-border-strong bg-sp-surface px-4 py-2.5 text-sm font-semibold text-sp-text transition hover:bg-sp-surface-muted"
                     >
-                        <x-stockpilot.icon name="x" class="h-5 w-5" />
-                    </button>
-                </div>
-
-                <form
-                    method="POST"
-                    action="{{ route('admin.suppliers.store') }}"
-                    class="space-y-5 p-5"
-                >
-                    @csrf
-
-                    <div class="grid gap-5 md:grid-cols-2">
-                        <div>
-                            <label for="supplier-create-name" class="mb-2 block text-sm font-semibold text-sp-text">
-                                {{ __('Supplier name') }}
-                            </label>
-
-                            <input
-                                id="supplier-create-name"
-                                name="name"
-                                type="text"
-                                value="{{ old('name') }}"
-                                maxlength="150"
-                                required
-                                class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3 py-2.5 text-sm text-sp-text outline-none focus:border-sp-primary focus:ring-2 focus:ring-sp-primary/10"
-                            >
-                        </div>
-
-                        <div>
-                            <label for="supplier-create-company" class="mb-2 block text-sm font-semibold text-sp-text">
-                                {{ __('Company') }}
-                            </label>
-
-                            <input
-                                id="supplier-create-company"
-                                name="company"
-                                type="text"
-                                value="{{ old('company') }}"
-                                maxlength="150"
-                                class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3 py-2.5 text-sm text-sp-text outline-none focus:border-sp-primary focus:ring-2 focus:ring-sp-primary/10"
-                            >
-                        </div>
-
-                        <div>
-                            <label for="supplier-create-phone" class="mb-2 block text-sm font-semibold text-sp-text">
-                                {{ __('Phone') }}
-                            </label>
-
-                            <input
-                                id="supplier-create-phone"
-                                name="phone"
-                                type="text"
-                                value="{{ old('phone') }}"
-                                maxlength="30"
-                                class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3 py-2.5 text-sm text-sp-text outline-none focus:border-sp-primary focus:ring-2 focus:ring-sp-primary/10"
-                            >
-                        </div>
-
-                        <div>
-                            <label for="supplier-create-email" class="mb-2 block text-sm font-semibold text-sp-text">
-                                {{ __('Email') }}
-                            </label>
-
-                            <input
-                                id="supplier-create-email"
-                                name="email"
-                                type="email"
-                                value="{{ old('email') }}"
-                                maxlength="150"
-                                class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3 py-2.5 text-sm text-sp-text outline-none focus:border-sp-primary focus:ring-2 focus:ring-sp-primary/10"
-                            >
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <label for="supplier-create-address" class="mb-2 block text-sm font-semibold text-sp-text">
-                                {{ __('Address') }}
-                            </label>
-
-                            <textarea
-                                id="supplier-create-address"
-                                name="address"
-                                rows="3"
-                                maxlength="5000"
-                                class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3 py-2.5 text-sm text-sp-text outline-none focus:border-sp-primary focus:ring-2 focus:ring-sp-primary/10"
-                            >{{ old('address') }}</textarea>
-                        </div>
-
-                        <div>
-                            <label for="supplier-create-status" class="mb-2 block text-sm font-semibold text-sp-text">
-                                {{ __('Status') }}
-                            </label>
-
-                            <select
-                                id="supplier-create-status"
-                                name="status"
-                                required
-                                class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3 py-2.5 text-sm text-sp-text outline-none focus:border-sp-primary focus:ring-2 focus:ring-sp-primary/10"
-                            >
-                                <option value="active" @selected(old('status', 'active') === 'active')>
-                                    {{ __('Active') }}
-                                </option>
-
-                                <option value="inactive" @selected(old('status') === 'inactive')>
-                                    {{ __('Inactive') }}
-                                </option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                        <button
-                            type="button"
-                            x-on:click="closeModals()"
-                            class="rounded-xl border border-sp-border px-4 py-2.5 text-sm font-semibold text-sp-text transition hover:bg-sp-surface-muted"
-                        >
-                            {{ __('Cancel') }}
-                        </button>
-
-                        <button
-                            type="submit"
-                            class="rounded-xl bg-sp-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-sp-brand-dark"
-                        >
-                            {{ __('Create supplier') }}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    @endcan
-
-    <div
-        x-cloak
-        x-show="editOpen"
-        x-transition.opacity
-        class="fixed inset-0 z-[70] flex items-center justify-center bg-sp-brand-dark/50 p-4 backdrop-blur-sm"
-        x-on:click.self="closeModals()"
-    >
-        <div
-            x-show="editOpen"
-            x-transition.scale.origin.center
-            class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-sp-border bg-sp-surface shadow-2xl"
-        >
-            <div class="flex items-start justify-between border-b border-sp-border px-5 py-4">
-                <div>
-                    <h2 class="text-lg font-bold text-sp-brand-dark dark:text-white">
+                        <x-stockpilot.icon name="edit" class="h-4 w-4" />
                         {{ __('Edit supplier') }}
-                    </h2>
+                    </button>
+                @endcan
 
-                    <p class="mt-1 text-sm text-sp-text-muted">
-                        {{ __('Update supplier master data.') }}
-                    </p>
-                </div>
+            </article>
 
-                <button
-                    type="button"
-                    x-on:click="closeModals()"
-                    class="flex h-9 w-9 items-center justify-center rounded-lg text-sp-text-muted transition hover:bg-sp-surface-muted hover:text-sp-text"
-                    aria-label="{{ __('Close') }}"
-                >
-                    <x-stockpilot.icon name="x" class="h-5 w-5" />
-                </button>
+        @empty
+
+            <div class="rounded-2xl border border-sp-border bg-sp-surface px-6 py-14 text-center shadow-sm dark:border-sp-border dark:bg-sp-surface">
+
+                <x-stockpilot.empty-state
+                    icon="suppliers"
+                    :title="__('No suppliers found')"
+                    :message="__('Try changing your search or status filter.')"
+                />
+
             </div>
 
+        @endforelse
+
+        @if ($suppliers->hasPages())
+            <div>
+                {{ $suppliers->links() }}
+            </div>
+        @endif
+
+    </div>
+
+    <x-stockpilot.pagination-bar
+        :paginator="$suppliers"
+        :item-label="__('suppliers')"
+    />
+
+    @can('create', \App\Models\Supplier::class)
+        <x-stockpilot.modal
+            open="createOpen"
+            close="closeModals()"
+            :title="__('Add supplier')"
+            :subtitle="__('Create a supplier master record.')"
+            :eyebrow="__('Master data')"
+            icon="suppliers"
+            heading-id="create-supplier-title"
+            dialog-label="{{ __('Add supplier') }}"
+            width="max-w-2xl"
+        >
             <form
+                id="supplier-create-form"
                 method="POST"
-                x-bind:action="editingSupplier ? `{{ url('/admin/suppliers') }}/${editingSupplier.id}` : '#'"
-                class="space-y-5 p-5"
+                action="{{ route('admin.suppliers.store') }}"
+                class="space-y-5 px-6 py-6"
             >
                 @csrf
-                @method('PATCH')
 
                 <div class="grid gap-5 md:grid-cols-2">
+
                     <div>
-                        <label for="supplier-edit-name" class="mb-2 block text-sm font-semibold text-sp-text">
+                        <label for="supplier-create-name" class="mb-2 block text-sm font-semibold text-sp-text">
                             {{ __('Supplier name') }}
                         </label>
 
                         <input
-                            id="supplier-edit-name"
+                            id="supplier-create-name"
                             name="name"
                             type="text"
-                            required
+                            value="{{ old('name') }}"
                             maxlength="150"
-                            x-model="editingSupplier.name"
-                            class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3 py-2.5 text-sm text-sp-text outline-none focus:border-sp-primary focus:ring-2 focus:ring-sp-primary/10"
+                            required
+                            class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3.5 py-3 text-sm text-sp-text outline-none transition focus:border-sp-primary focus:ring-4 focus:ring-sp-primary/10 dark:border-sp-border dark:bg-sp-surface-soft dark:text-sp-text dark:focus:border-sp-success"
                         >
                     </div>
 
                     <div>
-                        <label for="supplier-edit-company" class="mb-2 block text-sm font-semibold text-sp-text">
+                        <label for="supplier-create-company" class="mb-2 block text-sm font-semibold text-sp-text">
                             {{ __('Company') }}
                         </label>
 
                         <input
-                            id="supplier-edit-company"
+                            id="supplier-create-company"
                             name="company"
                             type="text"
+                            value="{{ old('company') }}"
                             maxlength="150"
-                            x-model="editingSupplier.company"
-                            class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3 py-2.5 text-sm text-sp-text outline-none focus:border-sp-primary focus:ring-2 focus:ring-sp-primary/10"
+                            class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3.5 py-3 text-sm text-sp-text outline-none transition focus:border-sp-primary focus:ring-4 focus:ring-sp-primary/10 dark:border-sp-border dark:bg-sp-surface-soft dark:text-sp-text dark:focus:border-sp-success"
                         >
                     </div>
 
                     <div>
-                        <label for="supplier-edit-phone" class="mb-2 block text-sm font-semibold text-sp-text">
+                        <label for="supplier-create-phone" class="mb-2 block text-sm font-semibold text-sp-text">
                             {{ __('Phone') }}
                         </label>
 
                         <input
-                            id="supplier-edit-phone"
+                            id="supplier-create-phone"
                             name="phone"
                             type="text"
+                            value="{{ old('phone') }}"
                             maxlength="30"
-                            x-model="editingSupplier.phone"
-                            class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3 py-2.5 text-sm text-sp-text outline-none focus:border-sp-primary focus:ring-2 focus:ring-sp-primary/10"
+                            class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3.5 py-3 text-sm text-sp-text outline-none transition focus:border-sp-primary focus:ring-4 focus:ring-sp-primary/10 dark:border-sp-border dark:bg-sp-surface-soft dark:text-sp-text dark:focus:border-sp-success"
                         >
                     </div>
 
                     <div>
-                        <label for="supplier-edit-email" class="mb-2 block text-sm font-semibold text-sp-text">
+                        <label for="supplier-create-email" class="mb-2 block text-sm font-semibold text-sp-text">
                             {{ __('Email') }}
                         </label>
 
                         <input
-                            id="supplier-edit-email"
+                            id="supplier-create-email"
                             name="email"
                             type="email"
+                            value="{{ old('email') }}"
                             maxlength="150"
-                            x-model="editingSupplier.email"
-                            class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3 py-2.5 text-sm text-sp-text outline-none focus:border-sp-primary focus:ring-2 focus:ring-sp-primary/10"
+                            class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3.5 py-3 text-sm text-sp-text outline-none transition focus:border-sp-primary focus:ring-4 focus:ring-sp-primary/10 dark:border-sp-border dark:bg-sp-surface-soft dark:text-sp-text dark:focus:border-sp-success"
                         >
                     </div>
 
                     <div class="md:col-span-2">
-                        <label for="supplier-edit-address" class="mb-2 block text-sm font-semibold text-sp-text">
+                        <label for="supplier-create-address" class="mb-2 block text-sm font-semibold text-sp-text">
                             {{ __('Address') }}
                         </label>
 
                         <textarea
-                            id="supplier-edit-address"
+                            id="supplier-create-address"
                             name="address"
                             rows="3"
                             maxlength="5000"
-                            x-model="editingSupplier.address"
-                            class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3 py-2.5 text-sm text-sp-text outline-none focus:border-sp-primary focus:ring-2 focus:ring-sp-primary/10"
-                        ></textarea>
+                            class="w-full resize-none rounded-xl border border-sp-border bg-sp-surface-muted px-3.5 py-3 text-sm text-sp-text outline-none transition focus:border-sp-primary focus:ring-4 focus:ring-sp-primary/10 dark:border-sp-border dark:bg-sp-surface-soft dark:text-sp-text dark:focus:border-sp-success"
+                        >{{ old('address') }}</textarea>
                     </div>
 
                     <div>
-                        <label for="supplier-edit-status" class="mb-2 block text-sm font-semibold text-sp-text">
+                        <label for="supplier-create-status" class="mb-2 block text-sm font-semibold text-sp-text">
                             {{ __('Status') }}
                         </label>
 
                         <select
-                            id="supplier-edit-status"
+                            id="supplier-create-status"
                             name="status"
                             required
-                            x-model="editingSupplier.status"
-                            class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3 py-2.5 text-sm text-sp-text outline-none focus:border-sp-primary focus:ring-2 focus:ring-sp-primary/10"
+                            class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3.5 py-3 text-sm text-sp-text outline-none transition focus:border-sp-primary focus:ring-4 focus:ring-sp-primary/10 dark:border-sp-border dark:bg-sp-surface-soft dark:text-sp-text dark:focus:border-sp-success"
                         >
-                            <option value="active">{{ __('Active') }}</option>
-                            <option value="inactive">{{ __('Inactive') }}</option>
+                            <option value="active" @selected(old('status', 'active') === 'active')>
+                                {{ __('Active') }}
+                            </option>
+
+                            <option value="inactive" @selected(old('status') === 'inactive')>
+                                {{ __('Inactive') }}
+                            </option>
                         </select>
                     </div>
-                </div>
 
-                <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                    <button
-                        type="button"
-                        x-on:click="closeModals()"
-                        class="rounded-xl border border-sp-border px-4 py-2.5 text-sm font-semibold text-sp-text transition hover:bg-sp-surface-muted"
-                    >
-                        {{ __('Cancel') }}
-                    </button>
-
-                    <button
-                        type="submit"
-                        class="rounded-xl bg-sp-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-sp-brand-dark"
-                    >
-                        {{ __('Save changes') }}
-                    </button>
                 </div>
             </form>
-        </div>
-    </div>
-</div>
+
+            <x-slot:footer>
+                <button
+                    type="button"
+                    @click="closeModals()"
+                    class="rounded-xl border border-sp-border-strong bg-sp-surface px-4 py-2.5 text-sm font-bold text-sp-text-muted transition hover:bg-sp-surface-muted dark:border-sp-border-strong dark:bg-sp-surface dark:text-sp-text-muted"
+                >
+                    {{ __('Cancel') }}
+                </button>
+
+                <button
+                    type="submit"
+                    form="supplier-create-form"
+                    class="rounded-xl bg-sp-primary px-4 py-2.5 text-sm font-bold text-sp-primary-foreground transition hover:bg-sp-primary-hover focus:outline-none focus:ring-4 focus:ring-sp-primary/15 dark:bg-sp-primary dark:text-sp-primary-foreground dark:hover:bg-sp-primary-hover"
+                >
+                    {{ __('Create supplier') }}
+                </button>
+            </x-slot:footer>
+        </x-stockpilot.modal>
+    @endcan
+
+    <x-stockpilot.modal
+        open="editOpen"
+        close="closeModals()"
+        :title="__('Edit supplier')"
+        :subtitle="__('Update supplier master data.')"
+        :eyebrow="__('Master data')"
+        icon="suppliers"
+        heading-id="edit-supplier-title"
+        dialog-label="{{ __('Edit supplier') }}"
+        width="max-w-2xl"
+    >
+        <form
+            id="supplier-edit-form"
+            method="POST"
+            x-bind:action="editingSupplier ? `{{ url('/admin/suppliers') }}/${editingSupplier.id}` : '#'"
+            class="space-y-5 px-6 py-6"
+        >
+            @csrf
+            @method('PATCH')
+
+            <div class="grid gap-5 md:grid-cols-2">
+
+                <div>
+                    <label for="supplier-edit-name" class="mb-2 block text-sm font-semibold text-sp-text">
+                        {{ __('Supplier name') }}
+                    </label>
+
+                    <input
+                        id="supplier-edit-name"
+                        name="name"
+                        type="text"
+                        required
+                        maxlength="150"
+                        x-model="editingSupplier.name"
+                        class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3.5 py-3 text-sm text-sp-text outline-none transition focus:border-sp-primary focus:ring-4 focus:ring-sp-primary/10 dark:border-sp-border dark:bg-sp-surface-soft dark:text-sp-text dark:focus:border-sp-success"
+                    >
+                </div>
+
+                <div>
+                    <label for="supplier-edit-company" class="mb-2 block text-sm font-semibold text-sp-text">
+                        {{ __('Company') }}
+                    </label>
+
+                    <input
+                        id="supplier-edit-company"
+                        name="company"
+                        type="text"
+                        maxlength="150"
+                        x-model="editingSupplier.company"
+                        class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3.5 py-3 text-sm text-sp-text outline-none transition focus:border-sp-primary focus:ring-4 focus:ring-sp-primary/10 dark:border-sp-border dark:bg-sp-surface-soft dark:text-sp-text dark:focus:border-sp-success"
+                    >
+                </div>
+
+                <div>
+                    <label for="supplier-edit-phone" class="mb-2 block text-sm font-semibold text-sp-text">
+                        {{ __('Phone') }}
+                    </label>
+
+                    <input
+                        id="supplier-edit-phone"
+                        name="phone"
+                        type="text"
+                        maxlength="30"
+                        x-model="editingSupplier.phone"
+                        class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3.5 py-3 text-sm text-sp-text outline-none transition focus:border-sp-primary focus:ring-4 focus:ring-sp-primary/10 dark:border-sp-border dark:bg-sp-surface-soft dark:text-sp-text dark:focus:border-sp-success"
+                    >
+                </div>
+
+                <div>
+                    <label for="supplier-edit-email" class="mb-2 block text-sm font-semibold text-sp-text">
+                        {{ __('Email') }}
+                    </label>
+
+                    <input
+                        id="supplier-edit-email"
+                        name="email"
+                        type="email"
+                        maxlength="150"
+                        x-model="editingSupplier.email"
+                        class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3.5 py-3 text-sm text-sp-text outline-none transition focus:border-sp-primary focus:ring-4 focus:ring-sp-primary/10 dark:border-sp-border dark:bg-sp-surface-soft dark:text-sp-text dark:focus:border-sp-success"
+                    >
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="supplier-edit-address" class="mb-2 block text-sm font-semibold text-sp-text">
+                        {{ __('Address') }}
+                    </label>
+
+                    <textarea
+                        id="supplier-edit-address"
+                        name="address"
+                        rows="3"
+                        maxlength="5000"
+                        x-model="editingSupplier.address"
+                        class="w-full resize-none rounded-xl border border-sp-border bg-sp-surface-muted px-3.5 py-3 text-sm text-sp-text outline-none transition focus:border-sp-primary focus:ring-4 focus:ring-sp-primary/10 dark:border-sp-border dark:bg-sp-surface-soft dark:text-sp-text dark:focus:border-sp-success"
+                    ></textarea>
+                </div>
+
+                <div>
+                    <label for="supplier-edit-status" class="mb-2 block text-sm font-semibold text-sp-text">
+                        {{ __('Status') }}
+                    </label>
+
+                    <select
+                        id="supplier-edit-status"
+                        name="status"
+                        required
+                        x-model="editingSupplier.status"
+                        class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3.5 py-3 text-sm text-sp-text outline-none transition focus:border-sp-primary focus:ring-4 focus:ring-sp-primary/10 dark:border-sp-border dark:bg-sp-surface-soft dark:text-sp-text dark:focus:border-sp-success"
+                    >
+                        <option value="active">{{ __('Active') }}</option>
+                        <option value="inactive">{{ __('Inactive') }}</option>
+                    </select>
+                </div>
+
+            </div>
+        </form>
+
+        <x-slot:footer>
+            <button
+                type="button"
+                @click="closeModals()"
+                class="rounded-xl border border-sp-border-strong bg-sp-surface px-4 py-2.5 text-sm font-bold text-sp-text-muted transition hover:bg-sp-surface-muted dark:border-sp-border-strong dark:bg-sp-surface dark:text-sp-text-muted"
+            >
+                {{ __('Cancel') }}
+            </button>
+
+            <button
+                type="submit"
+                form="supplier-edit-form"
+                class="rounded-xl bg-sp-primary px-4 py-2.5 text-sm font-bold text-sp-primary-foreground transition hover:bg-sp-primary-hover focus:outline-none focus:ring-4 focus:ring-sp-primary/15 dark:bg-sp-primary dark:text-sp-primary-foreground dark:hover:bg-sp-primary-hover"
+            >
+                {{ __('Save changes') }}
+            </button>
+        </x-slot:footer>
+    </x-stockpilot.modal>
+
+</x-stockpilot.admin-page>

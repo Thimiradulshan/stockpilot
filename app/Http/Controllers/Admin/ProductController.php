@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Services\StockService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
+use LogicException;
 
 class ProductController extends Controller
 {
@@ -82,14 +83,19 @@ class ProductController extends Controller
 
         $data = $request->validated();
 
-        $stockService->adjust(
-            product: $product,
-            signedQuantity: $data['signed_quantity'],
-            actor: $request->user(),
-            movementType: StockMovementType::ADJUSTMENT,
-            reason: $data['reason'],
-            notes: $data['notes'] ?? null,
-        );
+        try {
+            $stockService->adjust(
+                product: $product,
+                signedQuantity: $data['signed_quantity'],
+                actor: $request->user(),
+                movementType: StockMovementType::ADJUSTMENT,
+                reason: $data['reason'],
+                notes: $data['notes'] ?? null,
+            );
+        } catch (LogicException $e) {
+            return back()
+                ->with('error', $e->getMessage());
+        }
 
         return to_route('admin.products.index');
     }

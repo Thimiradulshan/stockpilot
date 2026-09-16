@@ -226,7 +226,7 @@
                         @click="closeMobileSidebar()"
                         @class([
                             'group mb-1.5 flex items-center gap-3 rounded-xl px-3.5 py-3 text-[15px] font-semibold transition-all',
-                            'bg-[#167982] text-white shadow-lg shadow-[#015B63]/25' => request()->routeIs('admin.categories.*'),
+                            'bg-sp-sidebar-active text-white shadow-lg shadow-black/10' => request()->routeIs('admin.categories.*'),
                             'text-sp-sidebar-text hover:bg-sp-sidebar-hover hover:text-white' => ! request()->routeIs('admin.categories.*'),
                         ])
                         :title="sidebarIsExpanded() ? null : '{{ __('Categories') }}'"
@@ -234,26 +234,10 @@
 
                         <span class="flex h-6 w-6 shrink-0 items-center justify-center">
 
-                            <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="1.8"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
+                            <x-stockpilot.icon
+                                name="categories"
                                 class="h-[22px] w-[22px]"
-                                aria-hidden="true"
-                            >
-                                <path d="M9.5 3H16v6.5L9 17l-6-6 6.5-8Z"/>
-
-                                <circle
-                                    cx="13.25"
-                                    cy="6.25"
-                                    r="1.1"
-                                    fill="currentColor"
-                                    stroke="none"
-                                />
-                            </svg>
+                            />
 
                         </span>
 

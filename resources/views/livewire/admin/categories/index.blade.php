@@ -13,7 +13,7 @@
 
         @include('livewire.admin.categories.partials.header')
 
-        @include('livewire.admin.categories.partials.tabs')
+        <x-stockpilot.master-data-tabs />
 
         @include('livewire.admin.categories.partials.alerts')
 

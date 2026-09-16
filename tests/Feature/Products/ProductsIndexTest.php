@@ -146,6 +146,49 @@ class ProductsIndexTest extends TestCase
             ->assertDontSee('Active Product');
     }
 
+    public function test_products_can_be_filtered_by_stock_level(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        Product::factory()->create([
+            'name' => 'Healthy Stock',
+            'quantity' => 50,
+            'reorder_level' => 5,
+            'status' => 'active',
+        ]);
+
+        Product::factory()->create([
+            'name' => 'Low Stock Item',
+            'quantity' => 3,
+            'reorder_level' => 10,
+            'status' => 'active',
+        ]);
+
+        Product::factory()->create([
+            'name' => 'Out Of Stock Item',
+            'quantity' => 0,
+            'reorder_level' => 5,
+            'status' => 'active',
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->set('status', '')
+            ->assertSee('Healthy Stock')
+            ->assertSee('Low Stock Item')
+            ->assertSee('Out Of Stock Item')
+            ->set('stockLevel', 'low')
+            ->assertSee('Low Stock Item')
+            ->assertDontSee('Healthy Stock')
+            ->assertDontSee('Out Of Stock Item')
+            ->set('stockLevel', 'out')
+            ->assertSee('Out Of Stock Item')
+            ->assertDontSee('Healthy Stock')
+            ->assertDontSee('Low Stock Item')
+            ->call('clearFilters')
+            ->assertSee('Healthy Stock');
+    }
+
     public function test_clear_filters_resets_product_results(): void
     {
         $admin = User::factory()->admin()->create();

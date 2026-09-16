@@ -52,24 +52,6 @@
 
         <div class="flex flex-wrap items-center gap-2">
 
-            <select
-                wire:model.live="status"
-                class="rounded-xl border border-[#C7D6D2] bg-[#FBFCF7] px-4 py-3.5 text-sm font-bold text-[#143732] shadow-sm outline-none transition focus:border-[#015B63] focus:ring-4 focus:ring-[#015B63]/10 dark:border-[#5A5A5A] dark:bg-[#454545] dark:text-[#EAEAEA] dark:focus:border-[#4FC3C7]"
-            >
-                <option value="">
-                    {{ __('All statuses') }}
-                </option>
-
-                <option value="active">
-                    {{ __('Active') }}
-                </option>
-
-                <option value="inactive">
-                    {{ __('Inactive') }}
-                </option>
-            </select>
-
-
             @if ($this->hasActiveFilters())
 
                 <button

@@ -22,6 +22,9 @@ class Index extends Component
     #[Url(history: true)]
     public string $status = 'active';
 
+    #[Url(history: true)]
+    public string $stockLevel = '';
+
     public function mount(): void
     {
         $this->authorize('viewAny', Product::class);
@@ -52,6 +55,14 @@ class Index extends Component
     }
 
     /**
+     * Reset pagination when the stock level changes.
+     */
+    public function updatingStockLevel(): void
+    {
+        $this->resetPage();
+    }
+
+    /**
      * Reset all product filters.
      */
     public function clearFilters(): void
@@ -59,6 +70,7 @@ class Index extends Component
         $this->search = '';
         $this->category = '';
         $this->status = 'active';
+        $this->stockLevel = '';
 
         $this->resetPage();
     }
@@ -70,7 +82,8 @@ class Index extends Component
     {
         return $this->search !== ''
             || $this->category !== ''
-            || $this->status !== 'active';
+            || $this->status !== 'active'
+            || $this->stockLevel !== '';
     }
 
     /**
@@ -105,6 +118,23 @@ class Index extends Component
                     'status',
                     $this->status
                 )
+            )
+            ->when(
+                $this->stockLevel === 'low',
+                function ($query): void {
+                    $query
+                        ->where('status', 'active')
+                        ->whereColumn('quantity', '<=', 'reorder_level')
+                        ->where('quantity', '>', 0);
+                }
+            )
+            ->when(
+                $this->stockLevel === 'out',
+                function ($query): void {
+                    $query
+                        ->where('status', 'active')
+                        ->where('quantity', '<=', 0);
+                }
             )
             ->orderBy('name')
             ->paginate(10);

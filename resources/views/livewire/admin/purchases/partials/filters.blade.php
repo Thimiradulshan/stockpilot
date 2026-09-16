@@ -1,59 +1,34 @@
-<div class="mb-6 rounded-2xl border border-sp-border bg-sp-surface p-4 shadow-sm sm:p-5">
-    <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px_auto] lg:items-end">
-        <div>
-            <label
-                for="purchase-search"
-                class="mb-2 block text-sm font-semibold text-sp-text"
-            >
-                {{ __('Search purchases') }}
-            </label>
+<x-stockpilot.filter-bar aria-label="{{ __('Purchase filters') }}">
 
-            <input
-                id="purchase-search"
-                type="search"
-                wire:model.live.debounce.300ms="search"
-                placeholder="{{ __('Purchase number, supplier name...') }}"
-                class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3 py-2.5 text-sm text-sp-text outline-none placeholder:text-sp-text-muted focus:border-sp-primary focus:ring-2 focus:ring-sp-primary/10"
-            />
-        </div>
-
-        <div>
-            <label
-                for="purchase-status"
-                class="mb-2 block text-sm font-semibold text-sp-text"
-            >
-                {{ __('Status') }}
-            </label>
-
-            <select
-                id="purchase-status"
-                wire:model.live="status"
-                class="w-full rounded-xl border border-sp-border bg-sp-surface-muted px-3 py-2.5 text-sm text-sp-text outline-none focus:border-sp-primary focus:ring-2 focus:ring-sp-primary/10"
-            >
-                <option value="">
-                    {{ __('All statuses') }}
-                </option>
-
-                <option value="completed">
-                    {{ __('Completed') }}
-                </option>
-
-                <option value="cancelled">
-                    {{ __('Cancelled') }}
-                </option>
-            </select>
-        </div>
-
-        <div>
-            @if ($this->hasActiveFilters())
-                <button
-                    type="button"
-                    wire:click="clearFilters"
-                    class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-sp-border bg-sp-surface px-4 py-2.5 text-sm font-semibold text-sp-text transition hover:bg-sp-surface-muted lg:w-auto"
-                >
-                    {{ __('Clear') }}
-                </button>
-            @endif
-        </div>
+    <div class="w-full lg:max-w-2xl">
+        <x-stockpilot.search-input
+            id="purchase-search"
+            wire:model.live.debounce.300ms="search"
+            :placeholder="__('Search by purchase number or supplier name...')"
+        />
     </div>
-</div>
+
+    <div class="flex flex-wrap items-center gap-2">
+
+        <select
+            wire:model.live="status"
+            class="rounded-xl border border-sp-border-strong bg-sp-surface px-4 py-3.5 text-sm font-bold text-sp-text shadow-sm outline-none transition focus:border-sp-primary focus:ring-4 focus:ring-sp-primary/10 dark:border-sp-border-strong dark:bg-sp-surface-soft dark:text-sp-text dark:focus:border-sp-success"
+        >
+            <option value="">{{ __('All statuses') }}</option>
+            <option value="completed">{{ __('Completed') }}</option>
+            <option value="cancelled">{{ __('Cancelled') }}</option>
+        </select>
+
+        @if ($this->hasActiveFilters())
+            <button
+                type="button"
+                wire:click="clearFilters"
+                class="rounded-xl border border-sp-info/30 bg-sp-info-soft px-4 py-3.5 text-sm font-extrabold text-sp-info-foreground shadow-sm transition hover:bg-sp-info-soft dark:bg-sp-info-soft dark:text-sp-info"
+            >
+                {{ __('Clear filters') }}
+            </button>
+        @endif
+
+    </div>
+
+</x-stockpilot.filter-bar>

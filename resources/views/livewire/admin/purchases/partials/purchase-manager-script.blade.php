@@ -1,4 +1,14 @@
 <script>
+    window.__stockPilotPurchaseProducts = @js(
+        $products->map(fn ($product) => [
+            'id' => $product->id,
+            'name' => $product->name,
+            'sku' => $product->sku,
+            'cost_price' => (string) $product->cost_price,
+            'quantity' => (string) $product->quantity,
+        ])->values()
+    );
+
     window.purchaseManager = function (products) {
         const normalizedProducts = (products || []).map((product) => ({
             id: Number(product.id),

@@ -8,6 +8,7 @@ use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Services\PurchaseService;
 use Illuminate\Http\RedirectResponse;
+use LogicException;
 
 class PurchaseController extends Controller
 {
@@ -26,16 +27,21 @@ class PurchaseController extends Controller
             $data['supplier_id']
         );
 
-        $purchaseService->create(
-            supplier: $supplier,
-            purchaseNumber: $data['purchase_number'],
-            purchaseDate: $data['purchase_date'],
-            items: $data['items'],
-            discountAmount: $data['discount_amount'],
-            taxAmount: $data['tax_amount'],
-            actor: $request->user(),
-            notes: $data['notes'] ?? null,
-        );
+        try {
+            $purchaseService->create(
+                supplier: $supplier,
+                purchaseNumber: $data['purchase_number'],
+                purchaseDate: $data['purchase_date'],
+                items: $data['items'],
+                discountAmount: $data['discount_amount'],
+                taxAmount: $data['tax_amount'],
+                actor: $request->user(),
+                notes: $data['notes'] ?? null,
+            );
+        } catch (LogicException $e) {
+            return back()
+                ->with('error', $e->getMessage());
+        }
 
         return to_route('admin.purchases.index')
             ->with('success', 'Purchase created successfully.');
@@ -50,10 +56,15 @@ class PurchaseController extends Controller
     ): RedirectResponse {
         $this->authorize('cancel', $purchase);
 
-        $purchaseService->cancel(
-            purchase: $purchase,
-            actor: request()->user(),
-        );
+        try {
+            $purchaseService->cancel(
+                purchase: $purchase,
+                actor: request()->user(),
+            );
+        } catch (LogicException $e) {
+            return back()
+                ->with('error', $e->getMessage());
+        }
 
         return to_route('admin.purchases.index')
             ->with('success', 'Purchase cancelled successfully.');
