@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\InvoiceController;
+use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\SupplierController;
@@ -10,6 +12,7 @@ use App\Livewire\Admin\Categories\Index as CategoriesIndex;
 use App\Livewire\Admin\Customers\Index as CustomersIndex;
 use App\Livewire\Admin\Products\Index as ProductsIndex;
 use App\Livewire\Admin\Purchases\Index as PurchasesIndex;
+use App\Livewire\Admin\Sales\Index as SalesIndex;
 use App\Livewire\Admin\Suppliers\Index as SuppliersIndex;
 use Illuminate\Support\Facades\Route;
 
@@ -127,6 +130,34 @@ Route::middleware(['auth'])->group(function () {
     ])
         ->middleware('role:admin,stock')
         ->name('admin.purchases.cancel');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Sales
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('admin/sales', SalesIndex::class)
+        ->middleware('role:admin,sales')
+        ->name('admin.sales.index');
+
+    Route::post('admin/sales', [InvoiceController::class, 'store'])
+        ->middleware('role:admin,sales')
+        ->name('admin.sales.store');
+
+    Route::post('admin/sales/{invoice}/void', [
+        InvoiceController::class,
+        'void',
+    ])
+        ->middleware('role:admin,sales')
+        ->name('admin.sales.void');
+
+    Route::post('admin/sales/{invoice}/payments', [
+        PaymentController::class,
+        'store',
+    ])
+        ->middleware('role:admin,sales')
+        ->name('admin.sales.payments.store');
 
     /*
     |--------------------------------------------------------------------------

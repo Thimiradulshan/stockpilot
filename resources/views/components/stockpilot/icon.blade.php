@@ -23,6 +23,8 @@ $paths = [
         'system' => '<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/>',
         'bell' => '<path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>',
         'categories' => '<path d="M9.5 3H16v6.5L9 17l-6-6 6.5-8Z"/><circle cx="13.25" cy="6.25" r="1.1" fill="currentColor" stroke="none"/>',
+        'receipt' => '<path d="M6 2h12v20l-2-1.2L14 22l-2-1.2L10 22l-2-1.2L6 22V2Z"/><path d="M9 7h6M9 11h6M9 15h4"/>',
+        'credit-card' => '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>',
         'logout' => '<path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/>',
         'chevron-left' => '<path d="m15 18-6-6 6-6"/>',
         'chevron-right' => '<path d="m9 18 6-6-6-6"/>',

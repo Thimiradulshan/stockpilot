@@ -374,6 +374,43 @@
                 @endcan
 
 
+                {{-- Sales --}}
+                @can('viewAny', App\Models\Invoice::class)
+
+                    <a
+                        href="{{ route('admin.sales.index') }}"
+                        wire:navigate
+                        @click="closeMobileSidebar()"
+                        @class([
+                            'group mb-1.5 flex items-center gap-3 rounded-xl px-3.5 py-3 text-[15px] font-semibold transition-all',
+                            'bg-sp-sidebar-active text-white shadow-lg shadow-black/10' => request()->routeIs('admin.sales.*'),
+                            'text-sp-sidebar-text hover:bg-sp-sidebar-hover hover:text-white' => ! request()->routeIs('admin.sales.*'),
+                        ])
+                        :title="sidebarIsExpanded() ? null : '{{ __('Sales') }}'"
+                    >
+
+                        <span class="flex h-6 w-6 shrink-0 items-center justify-center">
+
+                            <x-stockpilot.icon
+                                name="receipt"
+                                class="h-[22px] w-[22px]"
+                            />
+
+                        </span>
+
+                        <span
+                            x-show="sidebarIsExpanded()"
+                            x-transition.opacity.duration.100ms
+                            class="truncate"
+                        >
+                            {{ __('Sales') }}
+                        </span>
+
+                    </a>
+
+                @endcan
+
+
                 {{-- Administration --}}
                 @can('viewAny', App\Models\User::class)
 
