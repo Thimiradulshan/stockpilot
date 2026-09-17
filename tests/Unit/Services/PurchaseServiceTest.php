@@ -12,7 +12,6 @@ use App\Models\Supplier;
 use App\Models\User;
 use App\Services\PurchaseService;
 use App\Services\StockService;
-use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use InvalidArgumentException;
 use LogicException;
@@ -195,7 +194,7 @@ class PurchaseServiceTest extends TestCase
         );
     }
 
-    public function test_duplicate_purchase_number_is_rejected_by_database(): void
+    public function test_duplicate_purchase_number_is_rejected_gracefully(): void
     {
         $user = User::factory()->stock()->create();
         $supplier = Supplier::factory()->create();
@@ -224,8 +223,9 @@ class PurchaseServiceTest extends TestCase
             actor: $user,
         );
 
-        $this->expectException(
-            UniqueConstraintViolationException::class
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage(
+            'A purchase with this number already exists.'
         );
 
         $this->purchaseService->create(

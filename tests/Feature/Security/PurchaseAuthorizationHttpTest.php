@@ -53,7 +53,7 @@ class PurchaseAuthorizationHttpTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_inactive_stock_user_cannot_access_purchase_area(): void
+    public function test_inactive_stock_user_is_logged_out_of_purchase_area(): void
     {
         $stock = User::factory()->stock()->create([
             'status' => 'inactive',
@@ -61,7 +61,9 @@ class PurchaseAuthorizationHttpTest extends TestCase
 
         $this->actingAs($stock)
             ->get(route('admin.purchases.index'))
-            ->assertForbidden();
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
     }
 
     public function test_sales_user_cannot_cancel_a_purchase(): void
@@ -135,7 +137,7 @@ class PurchaseAuthorizationHttpTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_inactive_stock_user_cannot_create_a_purchase(): void
+    public function test_inactive_stock_user_is_logged_out_when_creating_a_purchase(): void
     {
         $stock = User::factory()->stock()->create([
             'status' => 'inactive',
@@ -167,6 +169,8 @@ class PurchaseAuthorizationHttpTest extends TestCase
 
         $this->actingAs($stock)
             ->post(route('admin.purchases.store'), $payload)
-            ->assertForbidden();
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
     }
 }

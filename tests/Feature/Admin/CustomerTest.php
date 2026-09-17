@@ -99,7 +99,7 @@ class CustomerTest extends TestCase
         ]);
     }
 
-    public function test_inactive_user_cannot_create_customer(): void
+    public function test_inactive_user_is_logged_out_when_creating_customer(): void
     {
         $user = User::factory()
             ->state([
@@ -116,7 +116,9 @@ class CustomerTest extends TestCase
             ]
         );
 
-        $response->assertForbidden();
+        $response->assertRedirect(route('login'));
+
+        $this->assertGuest();
     }
 
     public function test_customer_name_is_required(): void
@@ -293,7 +295,7 @@ class CustomerTest extends TestCase
         ]);
     }
 
-    public function test_inactive_user_cannot_update_customer(): void
+    public function test_inactive_user_is_logged_out_when_updating_customer(): void
     {
         $user = User::factory()
             ->state([
@@ -314,7 +316,9 @@ class CustomerTest extends TestCase
             ]
         );
 
-        $response->assertForbidden();
+        $response->assertRedirect(route('login'));
+
+        $this->assertGuest();
 
         $this->assertDatabaseHas('customers', [
             'id' => $customer->id,

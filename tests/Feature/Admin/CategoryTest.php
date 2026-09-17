@@ -74,7 +74,7 @@ class CategoryTest extends TestCase
         ]);
     }
 
-    public function test_inactive_stock_user_cannot_create_a_category(): void
+    public function test_inactive_stock_user_is_logged_out_when_creating_a_category(): void
     {
         $stock = User::factory()
             ->stock()
@@ -87,7 +87,9 @@ class CategoryTest extends TestCase
                 'description' => null,
                 'status' => 'active',
             ])
-            ->assertForbidden();
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
 
         $this->assertDatabaseMissing('categories', [
             'name' => 'Inactive User Category',
@@ -216,7 +218,7 @@ class CategoryTest extends TestCase
         ]);
     }
 
-    public function test_inactive_stock_user_cannot_update_a_category(): void
+    public function test_inactive_stock_user_is_logged_out_when_updating_a_category(): void
     {
         $stock = User::factory()
             ->stock()
@@ -236,7 +238,9 @@ class CategoryTest extends TestCase
                     'status' => 'inactive',
                 ]
             )
-            ->assertForbidden();
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
     }
 
     public function test_update_allows_category_to_keep_its_existing_name(): void

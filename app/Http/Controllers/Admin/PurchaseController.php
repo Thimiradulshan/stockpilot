@@ -8,6 +8,7 @@ use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Services\PurchaseService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 use LogicException;
 
 class PurchaseController extends Controller
@@ -39,6 +40,12 @@ class PurchaseController extends Controller
                 notes: $data['notes'] ?? null,
             );
         } catch (LogicException $e) {
+            Log::warning('Purchase creation rejected', [
+                'purchase_number' => $data['purchase_number'] ?? null,
+                'user_id' => $request->user()?->getKey(),
+                'message' => $e->getMessage(),
+            ]);
+
             return back()
                 ->with('error', $e->getMessage());
         }
@@ -62,6 +69,12 @@ class PurchaseController extends Controller
                 actor: request()->user(),
             );
         } catch (LogicException $e) {
+            Log::warning('Purchase cancellation rejected', [
+                'purchase_id' => $purchase->getKey(),
+                'user_id' => request()->user()?->getKey(),
+                'message' => $e->getMessage(),
+            ]);
+
             return back()
                 ->with('error', $e->getMessage());
         }

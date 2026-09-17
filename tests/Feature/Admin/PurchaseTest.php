@@ -479,4 +479,163 @@ class PurchaseTest extends TestCase
             ->post(route('admin.purchases.cancel', $purchase))
             ->assertForbidden();
     }
+
+    public function test_per_line_tax_exceeding_the_line_gross_is_rejected(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $supplier = Supplier::factory()->create();
+
+        $product = Product::factory()
+            ->withQuantity(0)
+            ->create([
+                'status' => 'active',
+            ]);
+
+        $payload = [
+            'purchase_number' => 'PO-OVERTAXED-LINE-001',
+            'supplier_id' => $supplier->id,
+            'purchase_date' => now()->toDateString(),
+            'discount_amount' => '0.00',
+            'tax_amount' => '0.00',
+            'notes' => null,
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'quantity' => '5',
+                    'unit_cost' => '200.00',
+                    'discount_amount' => '0.00',
+                    'tax_amount' => '1000000000.00',
+                ],
+            ],
+        ];
+
+        $this->actingAs($admin)
+            ->post(route('admin.purchases.store'), $payload)
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseCount('purchases', 0);
+    }
+
+    public function test_future_purchase_date_is_rejected(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $supplier = Supplier::factory()->create();
+
+        $product = Product::factory()
+            ->withQuantity(0)
+            ->create([
+                'status' => 'active',
+            ]);
+
+        $payload = $this->purchasePayload($product, $supplier->id, [
+            'purchase_number' => 'PO-FUTURE-DATE-001',
+            'purchase_date' => now()->addDay()->toDateString(),
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.purchases.store'), $payload)
+            ->assertSessionHasErrors('purchase_date');
+
+        $this->assertDatabaseCount('purchases', 0);
+    }
+
+    public function test_purchase_date_older_than_lookback_window_is_rejected(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $supplier = Supplier::factory()->create();
+
+        $product = Product::factory()
+            ->withQuantity(0)
+            ->create([
+                'status' => 'active',
+            ]);
+
+        $payload = $this->purchasePayload($product, $supplier->id, [
+            'purchase_number' => 'PO-OLD-DATE-001',
+            'purchase_date' => now()
+                ->subDays(
+                    (int) config(
+                        'stockpilot.document_date_lookback_days'
+                    ) + 1
+                )
+                ->toDateString(),
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.purchases.store'), $payload)
+            ->assertSessionHasErrors('purchase_date');
+
+        $this->assertDatabaseCount('purchases', 0);
+    }
+
+    public function test_purchase_date_at_lookback_window_boundary_is_accepted(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $supplier = Supplier::factory()->create();
+
+        $product = Product::factory()
+            ->withQuantity(0)
+            ->create([
+                'status' => 'active',
+            ]);
+
+        $boundaryDate = now()
+            ->subDays(
+                (int) config(
+                    'stockpilot.document_date_lookback_days'
+                )
+            )
+            ->toDateString();
+
+        $payload = $this->purchasePayload($product, $supplier->id, [
+            'purchase_number' => 'PO-BOUNDARY-DATE-001',
+            'purchase_date' => $boundaryDate,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.purchases.store'), $payload)
+            ->assertRedirect(route('admin.purchases.index'));
+
+        $purchase = Purchase::query()
+            ->where('purchase_number', 'PO-BOUNDARY-DATE-001')
+            ->firstOrFail();
+
+        $this->assertSame(
+            $boundaryDate,
+            $purchase->purchase_date->toDateString()
+        );
+    }
+
+    /**
+     * Build a minimal purchase payload.
+     *
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function purchasePayload(
+        Product $product,
+        int $supplierId,
+        array $overrides = [],
+    ): array {
+        return array_merge([
+            'supplier_id' => $supplierId,
+            'purchase_date' => now()->toDateString(),
+            'discount_amount' => '0.00',
+            'tax_amount' => '0.00',
+            'notes' => null,
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'quantity' => '1',
+                    'unit_cost' => '100.00',
+                    'discount_amount' => '0.00',
+                    'tax_amount' => '0.00',
+                ],
+            ],
+        ], $overrides);
+    }
 }

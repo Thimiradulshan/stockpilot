@@ -505,7 +505,7 @@ class ProductWriteSecurityTest extends TestCase
         $this->assertDatabaseCount('stock_movements', 0);
     }
 
-    public function test_inactive_stock_user_cannot_adjust_stock(): void
+    public function test_inactive_stock_user_is_logged_out_when_adjusting_stock(): void
     {
         $user = User::factory()
             ->stock()
@@ -526,7 +526,9 @@ class ProductWriteSecurityTest extends TestCase
             ]
         );
 
-        $response->assertForbidden();
+        $response->assertRedirect(route('login'));
+
+        $this->assertGuest();
 
         $this->assertSame(
             '10.000',

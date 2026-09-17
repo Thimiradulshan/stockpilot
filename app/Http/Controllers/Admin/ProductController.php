@@ -10,21 +10,11 @@ use App\Http\Requests\Admin\UpdateProductRequest;
 use App\Models\Product;
 use App\Services\StockService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 use LogicException;
 
 class ProductController extends Controller
 {
-    /**
-     * Display the product management area.
-     */
-    public function index(): Response
-    {
-        $this->authorize('viewAny', Product::class);
-
-        return response('product-management');
-    }
-
     /**
      * Store a newly created product.
      */
@@ -93,6 +83,13 @@ class ProductController extends Controller
                 notes: $data['notes'] ?? null,
             );
         } catch (LogicException $e) {
+            Log::warning('Stock adjustment rejected', [
+                'product_id' => $product->getKey(),
+                'signed_quantity' => $data['signed_quantity'] ?? null,
+                'user_id' => $request->user()?->getKey(),
+                'message' => $e->getMessage(),
+            ]);
+
             return back()
                 ->with('error', $e->getMessage());
         }

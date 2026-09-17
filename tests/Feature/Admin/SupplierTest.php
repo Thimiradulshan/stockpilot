@@ -80,7 +80,7 @@ class SupplierTest extends TestCase
         ]);
     }
 
-    public function test_inactive_stock_user_cannot_create_a_supplier(): void
+    public function test_inactive_stock_user_is_logged_out_when_creating_a_supplier(): void
     {
         $stock = User::factory()
             ->stock()
@@ -95,7 +95,9 @@ class SupplierTest extends TestCase
                     'status' => 'active',
                 ],
             )
-            ->assertForbidden();
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
 
         $this->assertDatabaseMissing('suppliers', [
             'name' => 'Blocked Supplier',
@@ -245,7 +247,7 @@ class SupplierTest extends TestCase
         ]);
     }
 
-    public function test_inactive_stock_user_cannot_update_a_supplier(): void
+    public function test_inactive_stock_user_is_logged_out_when_updating_a_supplier(): void
     {
         $stock = User::factory()
             ->stock()
@@ -264,7 +266,9 @@ class SupplierTest extends TestCase
                     'status' => 'active',
                 ],
             )
-            ->assertForbidden();
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
 
         $this->assertDatabaseHas('suppliers', [
             'id' => $supplier->id,

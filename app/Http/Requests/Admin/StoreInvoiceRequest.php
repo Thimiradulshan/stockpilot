@@ -51,6 +51,15 @@ class StoreInvoiceRequest extends FormRequest
             'invoice_date' => [
                 'required',
                 'date_format:Y-m-d',
+                'before_or_equal:today',
+                'after_or_equal:'
+                    .now()
+                        ->subDays(
+                            (int) config(
+                                'stockpilot.document_date_lookback_days'
+                            )
+                        )
+                        ->toDateString(),
             ],
 
             'discount_amount' => [

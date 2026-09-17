@@ -689,4 +689,252 @@ class InvoiceTest extends TestCase
             ->get(route('admin.sales.index'))
             ->assertForbidden();
     }
+
+    public function test_header_tax_is_computed_on_tax_exclusive_subtotal(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $customer = Customer::factory()->create();
+
+        $product = Product::factory()
+            ->withQuantity(10)
+            ->create([
+                'selling_price' => 200.00,
+                'status' => 'active',
+            ]);
+
+        $payload = [
+            'invoice_number' => 'INV-NO-TAX-ON-TAX-001',
+            'customer_id' => $customer->id,
+            'invoice_date' => now()->toDateString(),
+            'discount_amount' => '0.00',
+            'tax_rate' => '10.00',
+            'notes' => null,
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'quantity' => '5',
+                    'unit_price' => '200.00',
+                    'discount_amount' => '0.00',
+                    'tax_amount' => '20.00',
+                ],
+            ],
+        ];
+
+        $this->actingAs($admin)
+            ->post(route('admin.sales.store'), $payload)
+            ->assertRedirect(route('admin.sales.index'));
+
+        $invoice = Invoice::query()
+            ->where('invoice_number', 'INV-NO-TAX-ON-TAX-001')
+            ->firstOrFail();
+
+        $this->assertSame('1000.00', $invoice->subtotal);
+        $this->assertSame('100.00', $invoice->tax_amount);
+        $this->assertSame('1100.00', $invoice->total_amount);
+    }
+
+    public function test_per_line_tax_exceeding_the_line_gross_is_rejected(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $customer = Customer::factory()->create();
+
+        $product = Product::factory()
+            ->withQuantity(10)
+            ->create([
+                'selling_price' => 200.00,
+                'status' => 'active',
+            ]);
+
+        $payload = [
+            'invoice_number' => 'INV-OVERTAXED-LINE-001',
+            'customer_id' => $customer->id,
+            'invoice_date' => now()->toDateString(),
+            'discount_amount' => '0.00',
+            'tax_rate' => '0.00',
+            'notes' => null,
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'quantity' => '5',
+                    'unit_price' => '200.00',
+                    'discount_amount' => '0.00',
+                    'tax_amount' => '1000000000.00',
+                ],
+            ],
+        ];
+
+        $this->actingAs($admin)
+            ->post(route('admin.sales.store'), $payload)
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseCount('invoices', 0);
+    }
+
+    public function test_future_invoice_date_is_rejected(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $customer = Customer::factory()->create();
+
+        $product = Product::factory()
+            ->withQuantity(10)
+            ->create([
+                'status' => 'active',
+            ]);
+
+        $payload = $this->invoicePayload($product, $customer->id, [
+            'invoice_number' => 'INV-FUTURE-DATE-001',
+            'invoice_date' => now()->addDay()->toDateString(),
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.sales.store'), $payload)
+            ->assertSessionHasErrors('invoice_date');
+
+        $this->assertDatabaseCount('invoices', 0);
+    }
+
+    public function test_invoice_date_older_than_lookback_window_is_rejected(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $customer = Customer::factory()->create();
+
+        $product = Product::factory()
+            ->withQuantity(10)
+            ->create([
+                'status' => 'active',
+            ]);
+
+        $payload = $this->invoicePayload($product, $customer->id, [
+            'invoice_number' => 'INV-OLD-DATE-001',
+            'invoice_date' => now()
+                ->subDays(
+                    (int) config(
+                        'stockpilot.document_date_lookback_days'
+                    ) + 1
+                )
+                ->toDateString(),
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.sales.store'), $payload)
+            ->assertSessionHasErrors('invoice_date');
+
+        $this->assertDatabaseCount('invoices', 0);
+    }
+
+    public function test_invoice_date_at_lookback_window_boundary_is_accepted(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $customer = Customer::factory()->create();
+
+        $product = Product::factory()
+            ->withQuantity(10)
+            ->create([
+                'status' => 'active',
+            ]);
+
+        $boundaryDate = now()
+            ->subDays(
+                (int) config(
+                    'stockpilot.document_date_lookback_days'
+                )
+            )
+            ->toDateString();
+
+        $payload = $this->invoicePayload($product, $customer->id, [
+            'invoice_number' => 'INV-BOUNDARY-DATE-001',
+            'invoice_date' => $boundaryDate,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.sales.store'), $payload)
+            ->assertRedirect(route('admin.sales.index'));
+
+        $invoice = Invoice::query()
+            ->where('invoice_number', 'INV-BOUNDARY-DATE-001')
+            ->firstOrFail();
+
+        $this->assertSame(
+            $boundaryDate,
+            $invoice->invoice_date->toDateString()
+        );
+    }
+
+    /**
+     * Build a minimal invoice payload.
+     *
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function invoicePayload(
+        Product $product,
+        int $customerId,
+        array $overrides = [],
+    ): array {
+        return array_merge([
+            'customer_id' => $customerId,
+            'invoice_date' => now()->toDateString(),
+            'discount_amount' => '0.00',
+            'tax_rate' => '0.00',
+            'notes' => null,
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'quantity' => '1',
+                    'unit_price' => '100.00',
+                    'discount_amount' => '0.00',
+                    'tax_amount' => '0.00',
+                ],
+            ],
+        ], $overrides);
+    }
+
+    public function test_invoice_with_recorded_payment_cannot_be_voided_even_if_status_drifts(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $customer = Customer::factory()->create();
+
+        $product = Product::factory()
+            ->withQuantity(0)
+            ->create([
+                'status' => 'active',
+            ]);
+
+        $invoice = Invoice::factory()->create([
+            'customer_id' => $customer->id,
+            'created_by' => $admin->id,
+            'status' => 'completed',
+            'payment_status' => 'unpaid',
+            'total_amount' => '1000.00',
+        ]);
+
+        $invoice->items()->create([
+            'product_id' => $product->id,
+            'quantity' => 2,
+            'unit_price' => 100.00,
+            'discount_amount' => 0.00,
+            'tax_amount' => 0.00,
+            'line_total' => 200.00,
+        ]);
+
+        Payment::factory()->create([
+            'invoice_id' => $invoice->id,
+            'amount' => '1000.00',
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.sales.void', $invoice))
+            ->assertSessionHas('error');
+
+        $this->assertSame(
+            'completed',
+            $invoice->fresh()->status
+        );
+    }
 }

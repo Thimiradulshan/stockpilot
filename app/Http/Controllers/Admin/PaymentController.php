@@ -8,6 +8,7 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Services\PaymentService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use LogicException;
 
@@ -35,6 +36,12 @@ class PaymentController extends Controller
                 actor: $request->user(),
             );
         } catch (LogicException $e) {
+            Log::warning('Payment rejected', [
+                'invoice_id' => $invoice->getKey(),
+                'user_id' => $request->user()?->getKey(),
+                'message' => $e->getMessage(),
+            ]);
+
             return back()
                 ->with('error', $e->getMessage());
         }

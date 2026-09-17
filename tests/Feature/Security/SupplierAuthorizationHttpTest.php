@@ -140,7 +140,7 @@ class SupplierAuthorizationHttpTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_inactive_admin_cannot_create_supplier(): void
+    public function test_inactive_admin_is_logged_out_when_creating_supplier(): void
     {
         $admin = User::factory()
             ->admin()
@@ -155,10 +155,12 @@ class SupplierAuthorizationHttpTest extends TestCase
                     'status' => 'active',
                 ],
             )
-            ->assertForbidden();
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
     }
 
-    public function test_inactive_stock_user_cannot_update_supplier(): void
+    public function test_inactive_stock_user_is_logged_out_when_updating_supplier(): void
     {
         $stock = User::factory()
             ->stock()
@@ -175,6 +177,8 @@ class SupplierAuthorizationHttpTest extends TestCase
                     'status' => 'active',
                 ],
             )
-            ->assertForbidden();
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
     }
 }

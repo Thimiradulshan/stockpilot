@@ -10,16 +10,21 @@ use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\UserController;
 use App\Livewire\Admin\Categories\Index as CategoriesIndex;
 use App\Livewire\Admin\Customers\Index as CustomersIndex;
+use App\Livewire\Admin\Dashboard;
+use App\Livewire\Admin\Ledger\Index as LedgerIndex;
 use App\Livewire\Admin\Products\Index as ProductsIndex;
 use App\Livewire\Admin\Purchases\Index as PurchasesIndex;
+use App\Livewire\Admin\Reports\Index as ReportsIndex;
 use App\Livewire\Admin\Sales\Index as SalesIndex;
+use App\Livewire\Admin\Statements\Index as StatementsIndex;
 use App\Livewire\Admin\Suppliers\Index as SuppliersIndex;
+use App\Livewire\Admin\Users\Index as UsersIndex;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route(auth()->check() ? 'dashboard' : 'login'))->name('home');
 
 Route::middleware(['auth'])->group(function () {
-    Route::view('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', Dashboard::class)->name('dashboard');
 
     /*
     |--------------------------------------------------------------------------
@@ -27,9 +32,17 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::get('admin/users', [UserController::class, 'index'])
+    Route::get('admin/users', UsersIndex::class)
         ->middleware('role:admin')
         ->name('admin.users.index');
+
+    Route::post('admin/users', [UserController::class, 'store'])
+        ->middleware(['role:admin', 'throttle:60,1'])
+        ->name('admin.users.store');
+
+    Route::patch('admin/users/{user}', [UserController::class, 'update'])
+        ->middleware(['role:admin', 'throttle:60,1'])
+        ->name('admin.users.update');
 
     /*
     |--------------------------------------------------------------------------
@@ -42,11 +55,11 @@ Route::middleware(['auth'])->group(function () {
         ->name('admin.categories.index');
 
     Route::post('admin/categories', [CategoryController::class, 'store'])
-        ->middleware('role:admin,stock')
+        ->middleware(['role:admin,stock', 'throttle:60,1'])
         ->name('admin.categories.store');
 
     Route::patch('admin/categories/{category}', [CategoryController::class, 'update'])
-        ->middleware('role:admin,stock')
+        ->middleware(['role:admin,stock', 'throttle:60,1'])
         ->name('admin.categories.update');
 
     /*
@@ -60,11 +73,11 @@ Route::middleware(['auth'])->group(function () {
         ->name('admin.suppliers.index');
 
     Route::post('admin/suppliers', [SupplierController::class, 'store'])
-        ->middleware('role:admin,stock')
+        ->middleware(['role:admin,stock', 'throttle:60,1'])
         ->name('admin.suppliers.store');
 
     Route::patch('admin/suppliers/{supplier}', [SupplierController::class, 'update'])
-        ->middleware('role:admin,stock')
+        ->middleware(['role:admin,stock', 'throttle:60,1'])
         ->name('admin.suppliers.update');
 
     /*
@@ -78,18 +91,18 @@ Route::middleware(['auth'])->group(function () {
         ->name('admin.products.index');
 
     Route::post('admin/products', [ProductController::class, 'store'])
-        ->middleware('role:admin,stock')
+        ->middleware(['role:admin,stock', 'throttle:60,1'])
         ->name('admin.products.store');
 
     Route::patch('admin/products/{product}', [ProductController::class, 'update'])
-        ->middleware('role:admin,stock')
+        ->middleware(['role:admin,stock', 'throttle:60,1'])
         ->name('admin.products.update');
 
     Route::patch('admin/products/{product}/stock', [
         ProductController::class,
         'adjustStock',
     ])
-        ->middleware('role:admin,stock')
+        ->middleware(['role:admin,stock', 'throttle:60,1'])
         ->name('admin.products.stock.adjust');
 
     /*
@@ -103,11 +116,11 @@ Route::middleware(['auth'])->group(function () {
         ->name('admin.customers.index');
 
     Route::post('admin/customers', [CustomerController::class, 'store'])
-        ->middleware('role:admin,sales')
+        ->middleware(['role:admin,sales', 'throttle:60,1'])
         ->name('admin.customers.store');
 
     Route::patch('admin/customers/{customer}', [CustomerController::class, 'update'])
-        ->middleware('role:admin,sales')
+        ->middleware(['role:admin,sales', 'throttle:60,1'])
         ->name('admin.customers.update');
 
     /*
@@ -121,14 +134,14 @@ Route::middleware(['auth'])->group(function () {
         ->name('admin.purchases.index');
 
     Route::post('admin/purchases', [PurchaseController::class, 'store'])
-        ->middleware('role:admin,stock')
+        ->middleware(['role:admin,stock', 'throttle:60,1'])
         ->name('admin.purchases.store');
 
     Route::post('admin/purchases/{purchase}/cancel', [
         PurchaseController::class,
         'cancel',
     ])
-        ->middleware('role:admin,stock')
+        ->middleware(['role:admin,stock', 'throttle:60,1'])
         ->name('admin.purchases.cancel');
 
     /*
@@ -142,44 +155,53 @@ Route::middleware(['auth'])->group(function () {
         ->name('admin.sales.index');
 
     Route::post('admin/sales', [InvoiceController::class, 'store'])
-        ->middleware('role:admin,sales')
+        ->middleware(['role:admin,sales', 'throttle:60,1'])
         ->name('admin.sales.store');
 
     Route::post('admin/sales/{invoice}/void', [
         InvoiceController::class,
         'void',
     ])
-        ->middleware('role:admin,sales')
+        ->middleware(['role:admin,sales', 'throttle:60,1'])
         ->name('admin.sales.void');
+
+    Route::get('admin/sales/{invoice}/print', [
+        InvoiceController::class,
+        'print',
+    ])
+        ->middleware('role:admin,sales')
+        ->name('admin.sales.print');
 
     Route::post('admin/sales/{invoice}/payments', [
         PaymentController::class,
         'store',
     ])
-        ->middleware('role:admin,sales')
+        ->middleware(['role:admin,sales', 'throttle:60,1'])
         ->name('admin.sales.payments.store');
 
     /*
     |--------------------------------------------------------------------------
-    | Temporary Security Verification Routes
+    | Reports
     |--------------------------------------------------------------------------
-    |
-    | Remove these before final production submission after the
-    | authorization suite has been consolidated.
-    |
     */
 
-    Route::get('security-test/admin', fn () => 'admin-area')
-        ->middleware('role:admin')
-        ->name('security.test.admin');
+    Route::get('admin/reports', ReportsIndex::class)
+        ->middleware('role:admin,sales,stock')
+        ->name('admin.reports.index');
 
-    Route::get('security-test/sales', fn () => 'sales-area')
-        ->middleware('role:sales')
-        ->name('security.test.sales');
+    /*
+    |--------------------------------------------------------------------------
+    | Customer Statements
+    |--------------------------------------------------------------------------
+    */
 
-    Route::get('security-test/stock', fn () => 'stock-area')
-        ->middleware('role:stock')
-        ->name('security.test.stock');
+    Route::get('admin/statements', StatementsIndex::class)
+        ->middleware('role:admin,sales')
+        ->name('admin.statements.index');
+
+    Route::get('admin/ledger', LedgerIndex::class)
+        ->middleware('role:admin,stock')
+        ->name('admin.ledger.index');
 });
 
 require __DIR__.'/settings.php';

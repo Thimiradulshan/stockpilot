@@ -4,6 +4,7 @@ namespace App\Livewire\Admin\Sales;
 
 use App\Models\Customer;
 use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\Product;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Url;
@@ -155,12 +156,25 @@ class Index extends Component
             ->sum('total_amount');
 
         $outstandingBalance = Invoice::query()
-            ->where('status', 'completed')
-            ->whereIn('payment_status', [
+            ->where('invoices.status', 'completed')
+            ->whereIn('invoices.payment_status', [
                 'unpaid',
                 'partially_paid',
             ])
-            ->sum('total_amount');
+            ->leftJoinSub(
+                Payment::query()
+                    ->select('invoice_id')
+                    ->selectRaw('SUM(amount) AS paid_amount')
+                    ->groupBy('invoice_id'),
+                'payment_totals',
+                'payment_totals.invoice_id',
+                '=',
+                'invoices.id',
+            )
+            ->selectRaw(
+                'COALESCE(SUM(invoices.total_amount - COALESCE(payment_totals.paid_amount, 0)), 0) AS outstanding_balance'
+            )
+            ->value('outstanding_balance');
 
         return view(
             'livewire.admin.sales.index',

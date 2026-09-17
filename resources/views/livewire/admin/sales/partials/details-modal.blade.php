@@ -230,6 +230,17 @@
         >
             {{ __('Close') }}
         </button>
+
+        <a
+            x-show="viewInvoice && viewInvoice.id"
+            x-bind:href="'{{ url('/admin/sales') }}/' + viewInvoice.id + '/print'"
+            target="_blank"
+            rel="noopener"
+            class="inline-flex items-center gap-2 rounded-xl bg-sp-primary px-4 py-2.5 text-sm font-bold text-sp-primary-foreground transition hover:bg-sp-primary-hover focus:outline-none focus:ring-4 focus:ring-sp-primary/15 dark:bg-sp-primary dark:text-sp-primary-foreground dark:hover:bg-sp-primary-hover"
+        >
+            <x-stockpilot.icon name="file-text" class="h-4 w-4" />
+            {{ __('Print receipt') }}
+        </a>
     </x-slot:footer>
 
 </x-stockpilot.modal>

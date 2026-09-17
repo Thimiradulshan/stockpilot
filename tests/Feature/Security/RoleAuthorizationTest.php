@@ -11,49 +11,48 @@ class RoleAuthorizationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_cannot_access_admin_area(): void
+    public function test_guest_cannot_access_user_administration(): void
     {
-        $this->get(route('security.test.admin'))
+        $this->get(route('admin.users.index'))
             ->assertRedirect(route('login'));
     }
 
     public function test_guest_cannot_access_sales_area(): void
     {
-        $this->get(route('security.test.sales'))
+        $this->get(route('admin.sales.index'))
             ->assertRedirect(route('login'));
     }
 
-    public function test_guest_cannot_access_stock_area(): void
+    public function test_guest_cannot_access_products_page(): void
     {
-        $this->get(route('security.test.stock'))
+        $this->get(route('admin.products.index'))
             ->assertRedirect(route('login'));
     }
 
-    public function test_admin_can_access_admin_area(): void
+    public function test_admin_can_access_user_administration(): void
     {
         $user = User::factory()->admin()->create();
 
         $this->actingAs($user)
-            ->get(route('security.test.admin'))
-            ->assertOk()
-            ->assertSee('admin-area');
+            ->get(route('admin.users.index'))
+            ->assertOk();
     }
 
-    public function test_sales_user_cannot_access_admin_area(): void
+    public function test_sales_user_cannot_access_user_administration(): void
     {
         $user = User::factory()->sales()->create();
 
         $this->actingAs($user)
-            ->get(route('security.test.admin'))
+            ->get(route('admin.users.index'))
             ->assertForbidden();
     }
 
-    public function test_stock_user_cannot_access_admin_area(): void
+    public function test_stock_user_cannot_access_user_administration(): void
     {
         $user = User::factory()->stock()->create();
 
         $this->actingAs($user)
-            ->get(route('security.test.admin'))
+            ->get(route('admin.users.index'))
             ->assertForbidden();
     }
 
@@ -62,9 +61,8 @@ class RoleAuthorizationTest extends TestCase
         $user = User::factory()->sales()->create();
 
         $this->actingAs($user)
-            ->get(route('security.test.sales'))
-            ->assertOk()
-            ->assertSee('sales-area');
+            ->get(route('admin.sales.index'))
+            ->assertOk();
     }
 
     public function test_admin_can_access_sales_area(): void
@@ -72,9 +70,8 @@ class RoleAuthorizationTest extends TestCase
         $user = User::factory()->admin()->create();
 
         $this->actingAs($user)
-            ->get(route('security.test.sales'))
-            ->assertOk()
-            ->assertSee('sales-area');
+            ->get(route('admin.sales.index'))
+            ->assertOk();
     }
 
     public function test_stock_user_cannot_access_sales_area(): void
@@ -82,40 +79,38 @@ class RoleAuthorizationTest extends TestCase
         $user = User::factory()->stock()->create();
 
         $this->actingAs($user)
-            ->get(route('security.test.sales'))
+            ->get(route('admin.sales.index'))
             ->assertForbidden();
     }
 
-    public function test_stock_user_can_access_stock_area(): void
+    public function test_stock_user_can_access_products_page(): void
     {
         $user = User::factory()->stock()->create();
 
         $this->actingAs($user)
-            ->get(route('security.test.stock'))
-            ->assertOk()
-            ->assertSee('stock-area');
+            ->get(route('admin.products.index'))
+            ->assertOk();
     }
 
-    public function test_admin_can_access_stock_area(): void
+    public function test_admin_can_access_products_page(): void
     {
         $user = User::factory()->admin()->create();
 
         $this->actingAs($user)
-            ->get(route('security.test.stock'))
-            ->assertOk()
-            ->assertSee('stock-area');
+            ->get(route('admin.products.index'))
+            ->assertOk();
     }
 
-    public function test_sales_user_cannot_access_stock_area(): void
+    public function test_sales_user_cannot_access_products_page(): void
     {
         $user = User::factory()->sales()->create();
 
         $this->actingAs($user)
-            ->get(route('security.test.stock'))
+            ->get(route('admin.products.index'))
             ->assertForbidden();
     }
 
-    public function test_inactive_admin_cannot_access_admin_area(): void
+    public function test_inactive_admin_is_logged_out_of_user_administration(): void
     {
         $user = User::factory()
             ->admin()
@@ -123,11 +118,13 @@ class RoleAuthorizationTest extends TestCase
             ->create();
 
         $this->actingAs($user)
-            ->get(route('security.test.admin'))
-            ->assertForbidden();
+            ->get(route('admin.users.index'))
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
     }
 
-    public function test_inactive_sales_user_cannot_access_sales_area(): void
+    public function test_inactive_sales_user_is_logged_out_of_sales_area(): void
     {
         $user = User::factory()
             ->sales()
@@ -135,11 +132,13 @@ class RoleAuthorizationTest extends TestCase
             ->create();
 
         $this->actingAs($user)
-            ->get(route('security.test.sales'))
-            ->assertForbidden();
+            ->get(route('admin.sales.index'))
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
     }
 
-    public function test_inactive_stock_user_cannot_access_stock_area(): void
+    public function test_inactive_stock_user_is_logged_out_of_products_page(): void
     {
         $user = User::factory()
             ->stock()
@@ -147,8 +146,10 @@ class RoleAuthorizationTest extends TestCase
             ->create();
 
         $this->actingAs($user)
-            ->get(route('security.test.stock'))
-            ->assertForbidden();
+            ->get(route('admin.products.index'))
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
     }
 
     public function test_invalid_role_does_not_grant_access(): void
@@ -160,7 +161,7 @@ class RoleAuthorizationTest extends TestCase
         ])->save();
 
         $this->actingAs($user)
-            ->get(route('security.test.admin'))
+            ->get(route('admin.users.index'))
             ->assertForbidden();
     }
 

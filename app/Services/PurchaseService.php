@@ -12,6 +12,7 @@ use Brick\Math\BigDecimal;
 use Brick\Math\Exception\MathException;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use LogicException;
@@ -154,18 +155,17 @@ class PurchaseService
                 );
             }
 
-            $purchase = Purchase::query()->create([
-                'purchase_number' => $purchaseNumber,
-                'supplier_id' => $lockedSupplier->getKey(),
-                'purchase_date' => $purchaseDate,
-                'subtotal' => (string) $subtotal->toScale(2),
-                'discount_amount' => (string) $headerDiscount->toScale(2),
-                'tax_amount' => (string) $headerTax->toScale(2),
-                'total_amount' => (string) $totalAmount->toScale(2),
-                'status' => 'completed',
-                'notes' => $normalizedNotes,
-                'created_by' => $actor->getKey(),
-            ]);
+            $purchase = $this->createPurchaseHeader(
+                purchaseNumber: $purchaseNumber,
+                lockedSupplierId: $lockedSupplier->getKey(),
+                purchaseDate: $purchaseDate,
+                subtotal: $subtotal,
+                headerDiscount: $headerDiscount,
+                headerTax: $headerTax,
+                totalAmount: $totalAmount,
+                normalizedNotes: $normalizedNotes,
+                actor: $actor,
+            );
 
             usort(
                 $normalizedItems,
@@ -430,6 +430,12 @@ class PurchaseService
                 );
             }
 
+            if ($itemTax->isGreaterThan($gross)) {
+                throw new LogicException(
+                    'Purchase item tax cannot exceed the item gross amount.'
+                );
+            }
+
             $lineTotal = $gross
                 ->minus($itemDiscount)
                 ->plus($itemTax)
@@ -669,7 +675,62 @@ class PurchaseService
     }
 
     /**
-     * Normalize a Y-m-d purchase date.
+     * Create the purchase header with a race-safe uniqueness guard.
+     *
+     * The number is pre-checked with a locking read so two concurrent
+     * requests cannot both pass validation and fail at the database
+     * with an unhandled error. The unique index remains the final guard.
+     *
+     * @throws MathException
+     */
+    private function createPurchaseHeader(
+        string $purchaseNumber,
+        int $lockedSupplierId,
+        string $purchaseDate,
+        BigDecimal $subtotal,
+        BigDecimal $headerDiscount,
+        BigDecimal $headerTax,
+        BigDecimal $totalAmount,
+        ?string $normalizedNotes,
+        User $actor,
+    ): Purchase {
+        if (
+            Purchase::query()
+                ->where('purchase_number', $purchaseNumber)
+                ->lockForUpdate()
+                ->exists()
+        ) {
+            throw new LogicException(
+                'A purchase with this number already exists.'
+            );
+        }
+
+        try {
+            return Purchase::query()->create([
+                'purchase_number' => $purchaseNumber,
+                'supplier_id' => $lockedSupplierId,
+                'purchase_date' => $purchaseDate,
+                'subtotal' => (string) $subtotal->toScale(2),
+                'discount_amount' => (string) $headerDiscount->toScale(2),
+                'tax_amount' => (string) $headerTax->toScale(2),
+                'total_amount' => (string) $totalAmount->toScale(2),
+                'status' => 'completed',
+                'notes' => $normalizedNotes,
+                'created_by' => $actor->getKey(),
+            ]);
+        } catch (QueryException $e) {
+            if (str_contains((string) $e->getCode(), '23000')) {
+                throw new LogicException(
+                    'A purchase with this number already exists.'
+                );
+            }
+
+            throw $e;
+        }
+    }
+
+    /**
+     * Normalize optional purchase notes.
      */
     private function normalizePurchaseDate(
         string $purchaseDate
@@ -702,6 +763,37 @@ class PurchaseService
             );
         }
 
+        $this->assertDateWithinWindow(
+            $date,
+            'Purchase'
+        );
+
         return $date->format('Y-m-d');
+    }
+
+    /**
+     * Ensure a document date is neither in the future nor too far back.
+     */
+    private function assertDateWithinWindow(
+        CarbonImmutable $date,
+        string $document,
+    ): void {
+        $today = CarbonImmutable::today();
+
+        if ($date->isAfter($today)) {
+            throw new InvalidArgumentException(
+                "{$document} date cannot be in the future."
+            );
+        }
+
+        $minimum = $today->subDays(
+            (int) config('stockpilot.document_date_lookback_days')
+        );
+
+        if ($date->isBefore($minimum)) {
+            throw new InvalidArgumentException(
+                "{$document} date is older than the allowed look-back window."
+            );
+        }
     }
 }

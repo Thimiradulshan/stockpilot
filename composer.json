@@ -1,11 +1,12 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/livewire-starter-kit",
+    "name": "stockpilot/stockpilot",
     "type": "project",
-    "description": "The official Laravel starter kit for Livewire.",
+    "description": "StockPilot: a stock management system for small businesses.",
     "keywords": [
         "laravel",
-        "framework"
+        "stock",
+        "inventory"
     ],
     "license": "MIT",
     "require": {

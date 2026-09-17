@@ -122,7 +122,7 @@ class MasterDataAuthorizationHttpTest extends TestCase
             ->assertSee('Manage customer records used by StockPilot sales and invoices.');
     }
 
-    public function test_inactive_stock_user_cannot_access_stock_master_data(): void
+    public function test_inactive_stock_user_is_logged_out_of_stock_master_data(): void
     {
         $user = User::factory()
             ->stock()
@@ -131,22 +131,24 @@ class MasterDataAuthorizationHttpTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('admin.categories.index'))
-            ->assertForbidden();
+            ->assertRedirect(route('login'));
 
         $this->actingAs($user)
             ->get(route('admin.suppliers.index'))
-            ->assertForbidden();
+            ->assertRedirect(route('login'));
 
         $this->actingAs($user)
             ->get(route('admin.products.index'))
-            ->assertForbidden();
+            ->assertRedirect(route('login'));
 
         $this->actingAs($user)
             ->get(route('admin.purchases.index'))
-            ->assertForbidden();
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
     }
 
-    public function test_inactive_sales_user_cannot_access_customers(): void
+    public function test_inactive_sales_user_is_logged_out_of_customers(): void
     {
         $user = User::factory()
             ->sales()
@@ -155,6 +157,8 @@ class MasterDataAuthorizationHttpTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('admin.customers.index'))
-            ->assertForbidden();
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
     }
 }

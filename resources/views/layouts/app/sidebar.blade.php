@@ -411,6 +411,117 @@
                 @endcan
 
 
+                {{-- Reports --}}
+                @can('viewAny', App\Models\Invoice::class)
+
+                    <a
+                        href="{{ route('admin.reports.index') }}"
+                        wire:navigate
+                        @click="closeMobileSidebar()"
+                        @class([
+                            'group mb-1.5 flex items-center gap-3 rounded-xl px-3.5 py-3 text-[15px] font-semibold transition-all',
+                            'bg-sp-sidebar-active text-white shadow-lg shadow-black/10' => request()->routeIs('admin.reports.*'),
+                            'text-sp-sidebar-text hover:bg-sp-sidebar-hover hover:text-white' => ! request()->routeIs('admin.reports.*'),
+                        ])
+                        :title="sidebarIsExpanded() ? null : '{{ __('Reports') }}'"
+                    >
+
+                        <span class="flex h-6 w-6 shrink-0 items-center justify-center">
+
+                            <x-stockpilot.icon
+                                name="reports"
+                                class="h-[22px] w-[22px]"
+                            />
+
+                        </span>
+
+                        <span
+                            x-show="sidebarIsExpanded()"
+                            x-transition.opacity.duration.100ms
+                            class="truncate"
+                        >
+                            {{ __('Reports') }}
+                        </span>
+
+                    </a>
+
+                @endcan
+
+
+                {{-- Stock ledger --}}
+                @can('viewAny', App\Models\Product::class)
+
+                    <a
+                        href="{{ route('admin.ledger.index') }}"
+                        wire:navigate
+                        @click="closeMobileSidebar()"
+                        @class([
+                            'group mb-1.5 flex items-center gap-3 rounded-xl px-3.5 py-3 text-[15px] font-semibold transition-all',
+                            'bg-sp-sidebar-active text-white shadow-lg shadow-black/10' => request()->routeIs('admin.ledger.*'),
+                            'text-sp-sidebar-text hover:bg-sp-sidebar-hover hover:text-white' => ! request()->routeIs('admin.ledger.*'),
+                        ])
+                        :title="sidebarIsExpanded() ? null : '{{ __('Stock ledger') }}'"
+                    >
+
+                        <span class="flex h-6 w-6 shrink-0 items-center justify-center">
+
+                            <x-stockpilot.icon
+                                name="ledger"
+                                class="h-[22px] w-[22px]"
+                            />
+
+                        </span>
+
+                        <span
+                            x-show="sidebarIsExpanded()"
+                            x-transition.opacity.duration.100ms
+                            class="truncate"
+                        >
+                            {{ __('Stock ledger') }}
+                        </span>
+
+                    </a>
+
+                @endcan
+
+
+                {{-- Customer statements --}}
+                @can('viewAny', App\Models\Invoice::class)
+
+                    <a
+                        href="{{ route('admin.statements.index') }}"
+                        wire:navigate
+                        @click="closeMobileSidebar()"
+                        @class([
+                            'group mb-1.5 flex items-center gap-3 rounded-xl px-3.5 py-3 text-[15px] font-semibold transition-all',
+                            'bg-sp-sidebar-active text-white shadow-lg shadow-black/10' => request()->routeIs('admin.statements.*'),
+                            'text-sp-sidebar-text hover:bg-sp-sidebar-hover hover:text-white' => ! request()->routeIs('admin.statements.*'),
+                        ])
+                        :title="sidebarIsExpanded() ? null : '{{ __('Customer statements') }}'"
+                    >
+
+                        <span class="flex h-6 w-6 shrink-0 items-center justify-center">
+
+                            <x-stockpilot.icon
+                                name="customers"
+                                class="h-[22px] w-[22px]"
+                            />
+
+                        </span>
+
+                        <span
+                            x-show="sidebarIsExpanded()"
+                            x-transition.opacity.duration.100ms
+                            class="truncate"
+                        >
+                            {{ __('Customer statements') }}
+                        </span>
+
+                    </a>
+
+                @endcan
+
+
                 {{-- Administration --}}
                 @can('viewAny', App\Models\User::class)
 

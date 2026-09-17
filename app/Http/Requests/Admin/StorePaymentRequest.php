@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StorePaymentRequest extends FormRequest
 {
@@ -40,6 +41,7 @@ class StorePaymentRequest extends FormRequest
                 'required',
                 'string',
                 'max:30',
+                Rule::in(['cash', 'card', 'bank_transfer', 'credit']),
             ],
 
             'idempotency_key' => [

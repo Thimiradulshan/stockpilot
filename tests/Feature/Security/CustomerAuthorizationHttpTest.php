@@ -63,7 +63,7 @@ class CustomerAuthorizationHttpTest extends TestCase
         $response->assertForbidden();
     }
 
-    public function test_inactive_sales_user_cannot_access_customer_page(): void
+    public function test_inactive_sales_user_is_logged_out_of_customer_page(): void
     {
         $user = User::factory()
             ->state([
@@ -75,7 +75,9 @@ class CustomerAuthorizationHttpTest extends TestCase
         $response = $this->actingAs($user)
             ->get(route('admin.customers.index'));
 
-        $response->assertForbidden();
+        $response->assertRedirect(route('login'));
+
+        $this->assertGuest();
     }
 
     public function test_guest_cannot_access_customer_page(): void

@@ -50,7 +50,7 @@ class ProductsIndexTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_inactive_stock_user_cannot_access_products_page(): void
+    public function test_inactive_stock_user_is_logged_out_of_products_page(): void
     {
         $stock = User::factory()
             ->stock()
@@ -59,7 +59,9 @@ class ProductsIndexTest extends TestCase
 
         $this->actingAs($stock)
             ->get(route('admin.products.index'))
-            ->assertForbidden();
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
     }
 
     public function test_products_can_be_searched(): void

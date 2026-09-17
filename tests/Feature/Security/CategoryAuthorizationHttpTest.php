@@ -124,7 +124,7 @@ class CategoryAuthorizationHttpTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_inactive_admin_cannot_create_category(): void
+    public function test_inactive_admin_is_logged_out_when_creating_category(): void
     {
         $admin = User::factory()
             ->admin()
@@ -137,10 +137,12 @@ class CategoryAuthorizationHttpTest extends TestCase
                 'description' => null,
                 'status' => 'active',
             ])
-            ->assertForbidden();
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
     }
 
-    public function test_inactive_stock_user_cannot_update_category(): void
+    public function test_inactive_stock_user_is_logged_out_when_updating_category(): void
     {
         $stock = User::factory()
             ->stock()
@@ -158,6 +160,8 @@ class CategoryAuthorizationHttpTest extends TestCase
                     'status' => 'inactive',
                 ]
             )
-            ->assertForbidden();
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
     }
 }

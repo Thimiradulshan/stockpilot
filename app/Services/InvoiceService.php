@@ -6,6 +6,7 @@ use App\Enums\StockMovementType;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\Payment;
 use App\Models\Product;
 use App\Models\User;
 use Brick\Math\BigDecimal;
@@ -13,6 +14,7 @@ use Brick\Math\Exception\MathException;
 use Brick\Math\RoundingMode;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use LogicException;
@@ -134,7 +136,9 @@ class InvoiceService
 
                 $item['line_total'] = $lineTotal;
 
-                $subtotal = $subtotal->plus($lineTotal);
+                $subtotal = $subtotal->plus(
+                    $this->calculateGoodsSubtotal($item)
+                );
             }
 
             unset($item);
@@ -160,20 +164,18 @@ class InvoiceService
                 );
             }
 
-            $invoice = Invoice::query()->create([
-                'invoice_number' => $invoiceNumber,
-                'customer_id' => $lockedCustomer->getKey(),
-                'invoice_date' => $invoiceDate,
-                'subtotal' => (string) $subtotal->toScale(2),
-                'discount_amount' => (string) $headerDiscount->toScale(2),
-                'tax_rate' => (string) $rate->toScale(2),
-                'tax_amount' => (string) $taxAmount->toScale(2),
-                'total_amount' => (string) $totalAmount->toScale(2),
-                'status' => 'completed',
-                'payment_status' => 'unpaid',
-                'notes' => $normalizedNotes,
-                'created_by' => $actor->getKey(),
-            ]);
+            $invoice = $this->createInvoiceHeader(
+                invoiceNumber: $invoiceNumber,
+                lockedCustomerId: $lockedCustomer->getKey(),
+                invoiceDate: $invoiceDate,
+                subtotal: $subtotal,
+                headerDiscount: $headerDiscount,
+                rate: $rate,
+                taxAmount: $taxAmount,
+                totalAmount: $totalAmount,
+                normalizedNotes: $normalizedNotes,
+                actor: $actor,
+            );
 
             usort(
                 $normalizedItems,
@@ -263,6 +265,16 @@ class InvoiceService
             }
 
             if ($lockedInvoice->payment_status !== 'unpaid') {
+                throw new LogicException(
+                    'An invoice with recorded payments cannot be voided.'
+                );
+            }
+
+            $hasRecordedPayments = Payment::query()
+                ->where('invoice_id', $lockedInvoice->getKey())
+                ->exists();
+
+            if ($hasRecordedPayments) {
                 throw new LogicException(
                     'An invoice with recorded payments cannot be voided.'
                 );
@@ -421,6 +433,12 @@ class InvoiceService
                 );
             }
 
+            if ($itemTax->isGreaterThan($gross)) {
+                throw new LogicException(
+                    'Invoice item tax cannot exceed the item gross amount.'
+                );
+            }
+
             $lineTotal = $gross
                 ->minus($itemDiscount)
                 ->plus($itemTax)
@@ -463,6 +481,26 @@ class InvoiceService
             ->multipliedBy($item['unit_price'])
             ->minus($item['discount_amount'])
             ->plus($item['tax_amount'])
+            ->toScale(2);
+    }
+
+    /**
+     * Calculate the tax-exclusive goods value of one invoice line.
+     *
+     * The header tax rate is derived from the exclusive base so that
+     * line-level taxes are never taxed a second time.
+     *
+     * @param array{
+     *     quantity: BigDecimal,
+     *     unit_price: BigDecimal
+     * } $item
+     *
+     * @throws MathException
+     */
+    private function calculateGoodsSubtotal(array $item): BigDecimal
+    {
+        return $item['quantity']
+            ->multipliedBy($item['unit_price'])
             ->toScale(2);
     }
 
@@ -621,6 +659,12 @@ class InvoiceService
     {
         $value = $this->decimalMoney($rate, 'Invoice tax rate');
 
+        if ($value->isNegative()) {
+            throw new InvalidArgumentException(
+                'Invoice tax rate cannot be negative.'
+            );
+        }
+
         if ($value->isGreaterThan(100)) {
             throw new InvalidArgumentException(
                 'Invoice tax rate cannot exceed 100 percent.'
@@ -628,6 +672,64 @@ class InvoiceService
         }
 
         return $value;
+    }
+
+    /**
+     * Create the invoice header with a race-safe uniqueness guard.
+     *
+     * The number is pre-checked with a locking read so two concurrent
+     * requests cannot both pass validation and fail at the database
+     * with an unhandled error. The unique index remains the final guard.
+     *
+     * @throws MathException
+     */
+    private function createInvoiceHeader(
+        string $invoiceNumber,
+        int $lockedCustomerId,
+        string $invoiceDate,
+        BigDecimal $subtotal,
+        BigDecimal $headerDiscount,
+        BigDecimal $rate,
+        BigDecimal $taxAmount,
+        BigDecimal $totalAmount,
+        ?string $normalizedNotes,
+        User $actor,
+    ): Invoice {
+        if (
+            Invoice::query()
+                ->where('invoice_number', $invoiceNumber)
+                ->lockForUpdate()
+                ->exists()
+        ) {
+            throw new LogicException(
+                'An invoice with this number already exists.'
+            );
+        }
+
+        try {
+            return Invoice::query()->create([
+                'invoice_number' => $invoiceNumber,
+                'customer_id' => $lockedCustomerId,
+                'invoice_date' => $invoiceDate,
+                'subtotal' => (string) $subtotal->toScale(2),
+                'discount_amount' => (string) $headerDiscount->toScale(2),
+                'tax_rate' => (string) $rate->toScale(2),
+                'tax_amount' => (string) $taxAmount->toScale(2),
+                'total_amount' => (string) $totalAmount->toScale(2),
+                'status' => 'completed',
+                'payment_status' => 'unpaid',
+                'notes' => $normalizedNotes,
+                'created_by' => $actor->getKey(),
+            ]);
+        } catch (QueryException $e) {
+            if (str_contains((string) $e->getCode(), '23000')) {
+                throw new LogicException(
+                    'An invoice with this number already exists.'
+                );
+            }
+
+            throw $e;
+        }
     }
 
     /**
@@ -701,6 +803,37 @@ class InvoiceService
             );
         }
 
+        $this->assertDateWithinWindow(
+            $date,
+            'Invoice'
+        );
+
         return $date->format('Y-m-d');
+    }
+
+    /**
+     * Ensure a document date is neither in the future nor too far back.
+     */
+    private function assertDateWithinWindow(
+        CarbonImmutable $date,
+        string $document,
+    ): void {
+        $today = CarbonImmutable::today();
+
+        if ($date->isAfter($today)) {
+            throw new InvalidArgumentException(
+                "{$document} date cannot be in the future."
+            );
+        }
+
+        $minimum = $today->subDays(
+            (int) config('stockpilot.document_date_lookback_days')
+        );
+
+        if ($date->isBefore($minimum)) {
+            throw new InvalidArgumentException(
+                "{$document} date is older than the allowed look-back window."
+            );
+        }
     }
 }

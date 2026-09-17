@@ -23,7 +23,7 @@ class UserAuthorizationHttpTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.users.index'))
             ->assertOk()
-            ->assertSee('user-administration');
+            ->assertSee('Team management');
     }
 
     public function test_sales_user_cannot_access_user_administration(): void
@@ -44,7 +44,7 @@ class UserAuthorizationHttpTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_inactive_admin_cannot_access_user_administration(): void
+    public function test_inactive_admin_is_logged_out_of_user_administration(): void
     {
         $admin = User::factory()
             ->admin()
@@ -53,6 +53,8 @@ class UserAuthorizationHttpTest extends TestCase
 
         $this->actingAs($admin)
             ->get(route('admin.users.index'))
-            ->assertForbidden();
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
     }
 }
